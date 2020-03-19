@@ -7,13 +7,20 @@ import get_bioclim_data as bioclim_layer_reader
 import get_worldclim_data as worldclim_layer_reader
 import get_esa_cci as esacci_layer_reader
 
+raster_max_lat = int(os.getenv("RASTER_MAX_LAT"))
+raster_min_lat = int(os.getenv("RASTER_MIN_LAT"))
+raster_max_lon = int(os.getenv("RASTER_MAX_LON"))
+raster_min_lon = int(os.getenv("RASTER_MIN_LON"))
+raster_cell_size_deg = float(os.getenv("RASTER_CELL_SIZE_DEG"))
 
-def lat_lon_to_indices(lat, lon, cell_size_degrees):
-    return int((72 - lat) / cell_size_degrees), int((lon - 4) / cell_size_degrees)
+
+def lat_lon_to_indices(lat, lon):
+    return int((raster_max_lat - lat) / raster_cell_size_deg), int((lon - raster_min_lon) / raster_cell_size_deg)
 
 
-def indices_to_lat_lon(lat_index, lon_index, cell_size_degrees):
-    return 72 - (lat_index + .5) * cell_size_degrees, (lon_index + .5) * cell_size_degrees + 4
+def indices_to_lat_lon(lat_index, lon_index):
+    return raster_max_lat - (lat_index + .5) * raster_cell_size_deg, (
+            lon_index + .5) * raster_cell_size_deg + raster_min_lon
 
 
 def get_layer_from_file(output_file, dataset):
@@ -25,7 +32,9 @@ def get_layer_from_file(output_file, dataset):
     if os.path.exists(output_file):
         return np.load(output_file)
     else:
-        metadata = {'lat_NW_cell_center': 72, 'lon_NW_cell_center': 4, 'cell_size_degrees': 1 / 120}
+        metadata = {'lat_NW_cell_center': raster_max_lat,
+                    'lon_NW_cell_center': raster_min_lon,
+                    'cell_size_degrees': raster_cell_size_deg}
 
         if dataset == 'esacci':
             metadata['data_type'] = 'categorical'
@@ -37,7 +46,10 @@ def get_layer_from_file(output_file, dataset):
             metadata['normalization_range'] = (99999999998, -99999999998)
         metadata['null_value'] = -99999999999
 
-        return {'map': np.ones((1800, 3800)) * np.nan,
+        raster_width = int((raster_max_lon - raster_min_lon) / raster_cell_size_deg)
+        raster_height = int((raster_max_lat - raster_min_lat) / raster_cell_size_deg)
+
+        return {'map': np.ones((raster_width, raster_height)) * np.nan,
                 'metadata': metadata}
 
 
@@ -60,10 +72,10 @@ def get_layer_names(dataset, date):
         return [dataset]
 
 
-def get_layer(dataset, layer_name, cache_dir):
+def get_layer(dataset, layer_name):
     layer_object = {}
 
-    filename = os.path.join(cache_dir, dataset, layer_name + '.npz')
+    filename = os.path.join(os.getenv("RASTER_CACHE_FOLDER_PATH"), dataset, layer_name + '.npz')
     layer = get_layer_from_file(filename, dataset)
 
     layer_object['map'] = layer['map']
@@ -91,7 +103,7 @@ def to_start_index(center, block_size):
     return center - int(block_size / 2)
 
 
-def get_blocks(occurrences, block_size, dataset, cache_dir):
+def get_blocks(occurrences, block_size, dataset):
     layer_reader = get_layer_reader(dataset)
     results = [{}] * len(occurrences)
     per_layer = {}
@@ -103,17 +115,17 @@ def get_blocks(occurrences, block_size, dataset, cache_dir):
                 per_layer[layer_name] = {}
             per_layer[layer_name][occ_index] = occurrence
 
-
     for layer_name, layer_occurrences in per_layer.items():
-        layer = get_layer(dataset, layer_name, cache_dir)
+        layer = get_layer(dataset, layer_name)
         incomplete_blocks = []
         incomplete_ids = []
         for occ_index, occurrence in layer_occurrences.items():
             lat, lon, _ = occurrence
-            lat_index, lon_index = lat_lon_to_indices(lat, lon, layer['metadata']['cell_size_degrees'])
-            lat, lon = indices_to_lat_lon(to_start_index(lat_index, block_size), to_start_index(lon_index, block_size), layer['metadata']['cell_size_degrees'])
+            lat_index, lon_index = lat_lon_to_indices(lat, lon)
+            lat, lon = indices_to_lat_lon(to_start_index(lat_index, block_size), to_start_index(lon_index, block_size))
 
-            results[occ_index][layer_name] = load_block(layer['map'], to_start_index(lat_index, block_size), to_start_index(lon_index, block_size), block_size)
+            results[occ_index][layer_name] = load_block(layer['map'], to_start_index(lat_index, block_size),
+                                                        to_start_index(lon_index, block_size), block_size)
 
             if np.isnan(np.sum(results[occ_index][layer_name])):
                 results[occ_index][layer_name][
@@ -121,23 +133,26 @@ def get_blocks(occurrences, block_size, dataset, cache_dir):
                 incomplete_ids += [occ_index]
                 incomplete_blocks += [{'block': results[occ_index][layer_name], 'lat_lon_start': (lat, lon)}]
 
-
-        completed_blocks = layer_reader.fill_blocks(layer_name, incomplete_blocks, layer['metadata']['cell_size_degrees'])
+        completed_blocks = layer_reader.fill_blocks(layer_name, incomplete_blocks,
+                                                    layer['metadata']['cell_size_degrees'])
 
         for block_index, completed_block in enumerate(completed_blocks):
             occ_index = incomplete_ids[block_index]
 
             if layer['metadata']['data_type'] != 'categorical':
-                layer['metadata']['normalization_range'] = (min(layer['metadata']['normalization_range'][0], np.nanmin(completed_block)), max(layer['metadata']['normalization_range'][1], np.nanmax(completed_block)))
+                layer['metadata']['normalization_range'] = (
+                    min(layer['metadata']['normalization_range'][0], np.nanmin(completed_block)),
+                    max(layer['metadata']['normalization_range'][1], np.nanmax(completed_block)))
 
             completed_block[np.isnan(completed_block)] = layer['metadata']['null_value']
             results[occ_index][layer_name] = completed_block
 
             lat, lon, _ = layer_occurrences[occ_index]
-            lat_index, lon_index = lat_lon_to_indices(lat, lon, layer['metadata']['cell_size_degrees'])
+            lat_index, lon_index = lat_lon_to_indices(lat, lon)
             layer['map'] = save_block(layer['map'], to_start_index(lat_index, block_size),
                                       to_start_index(lon_index, block_size),
                                       completed_block)
+        os.makedirs(os.path.dirname(layer['filename']), exist_ok=True)
         np.savez(layer['filename'], map=layer['map'], metadata=layer['metadata'])
 
         if layer['metadata']['data_type'] != 'categorical':
@@ -153,10 +168,11 @@ def get_blocks(occurrences, block_size, dataset, cache_dir):
             for result in results:
                 if layer_name in result:
                     for category in categories:
-                        result[layer_name + '_' + str(category)] = [list(map(lambda x: int(x == category), row)) for row in result[layer_name]]
+                        result[layer_name + '_' + str(category)] = [list(map(lambda x: int(x == category), row)) for row
+                                                                    in result[layer_name]]
 
     return results
 
 
 if __name__ == "__main__":
-    print("Call as get_blocks(positions, block_size, dataset, cache_dir)")
+    print("Call as get_blocks(positions, block_size, dataset)")
