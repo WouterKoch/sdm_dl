@@ -17,6 +17,11 @@ def indices_to_lat_lon(lat_index, lon_index, cell_size_degrees):
 
 
 def get_layer_from_file(output_file, dataset):
+    # save np.load
+    np_load_old = np.load
+    # modify the default parameters of np.load
+    np.load = lambda *a, **k: np_load_old(*a, allow_pickle=True, **k)
+
     if os.path.exists(output_file):
         return np.load(output_file)
     else:
