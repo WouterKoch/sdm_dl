@@ -17,7 +17,7 @@ os.environ["RASTER_CACHE_FOLDER_PATH"] = "/home/wouter/Projects/Naturalis/enviro
 
 import get_environmental_layer as get_env
 
-maps = get_env.get_blocks([(52.7, 5.1, datetime(2012, 1, 6))], 25, 'esacci')
+maps = get_env.get_blocks([(52.7, 5.1, datetime(2012, 1, 6))], 25, 'worldclim')
 
 for position in maps:
     for name, map in position.items():

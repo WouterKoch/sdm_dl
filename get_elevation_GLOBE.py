@@ -1,4 +1,4 @@
-import argparse
+import os
 from tqdm import tqdm
 import numpy as np
 from struct import unpack
@@ -6,7 +6,7 @@ from struct import unpack
 
 def get_value(lat, lon, current_file):
     if current_file is None:
-        current_file = open('/home/wouter/Projects/Naturalis/environment/GLOBE/c10g', "rb")
+        current_file = open(os.getenv("GLOBE_FILE_PATH"), "rb")
 
     get_row = (90 * 60 * 2) - int(lat * 60 * 2)
     get_col = int(lon * 60 * 2)
@@ -44,7 +44,3 @@ def fill_blocks(_, to_fetch, cell_size_degrees):
         result += [block]
         pbar.close()
     return result
-
-
-if __name__ == "__main__":
-    print("Call as fill_blocks(layer_name, to_fetch, cell_size_degrees)")

@@ -39,7 +39,7 @@ def fill_blocks(layer_name, to_fetch, cell_size_degrees):
     month = layer_name[-2:]
     worldclim_variable = layer_name[(-(len(layer_name) - 10)):][:-4]
 
-    path = '/home/wouter/Projects/Naturalis/environment/WorldClim'
+    path = os.getenv("WORLDCLIM_FOLDER_PATH")
     array = get_array_from_tif(
         os.path.join(path, worldclim_variable, 'wc2.0_30s_' + worldclim_variable + '_' + month + '.tif'))
     array_height, array_width = array.shape
@@ -63,18 +63,3 @@ def fill_blocks(layer_name, to_fetch, cell_size_degrees):
         result += [block]
 
     return result
-
-
-def main():
-    if (len(sys.argv) < 3):
-        print('Please provide an input file and a path to the WorldClim files')
-        quit(0)
-
-    if os.path.isfile(os.path.join(os.environ["PROJECT_ROOT"], 'source_data/metadata/WorldClim.csv')) or os.path.isfile(
-            os.path.join(os.environ["PROJECT_ROOT"], 'source_data/metadata/_WorldClim.csv')):
-        print('WorldClim file already exists, skipping.')
-        exit(0)
-
-
-if __name__ == "__main__":
-    main()

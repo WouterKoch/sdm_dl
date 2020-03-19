@@ -33,7 +33,7 @@ def fill_blocks(layer_name, to_fetch, cell_size_degrees):
             break
         return [None] * len(to_fetch)
 
-    path = '/home/wouter/Projects/Naturalis/environment/BioClim'
+    path = os.getenv("BIOCLIM_FOLDER_PATH")
     array = get_array_from_tif(path, layer_name[-2:])
     array_height, array_width = array.shape
 
@@ -57,11 +57,3 @@ def fill_blocks(layer_name, to_fetch, cell_size_degrees):
         result += [block]
 
     return result
-
-
-def main():
-    print("Call as fill_blocks(layer_name, to_fetch, cell_size_degrees)")
-
-
-if __name__ == "__main__":
-    main()

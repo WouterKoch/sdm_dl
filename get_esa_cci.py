@@ -44,7 +44,7 @@ def get_value(lat, lon, layer, array, array_height, array_width, path):
 def fill_blocks(layer, to_fetch, cell_size_degrees):
     result = []
 
-    path = '/home/wouter/Projects/Naturalis/environment/ESACCI'
+    path = os.getenv("ESACCI_FOLDER_PATH")
 
     for block_index, fetching in enumerate(to_fetch):
         if fetching == None:
@@ -68,11 +68,3 @@ def fill_blocks(layer, to_fetch, cell_size_degrees):
         result += [block]
         pbar.close()
     return result
-
-
-def main():
-    print("Call as fill_blocks(layer_name, to_fetch, cell_size_degrees)")
-
-
-if __name__ == "__main__":
-    main()
