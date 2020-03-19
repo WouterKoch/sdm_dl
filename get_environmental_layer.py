@@ -2,10 +2,8 @@ from tqdm import tqdm
 import os.path
 import numpy as np
 
-import get_elevation_GLOBE as elevation_layer_reader
-import get_bioclim_data as bioclim_layer_reader
-import get_worldclim_data as worldclim_layer_reader
-import get_esa_cci as esacci_layer_reader
+from layer_readers import bioclim as bioclim_layer_reader, GLOBE_elevation as elevation_layer_reader, \
+    esa_cci as esacci_layer_reader, worldclim as worldclim_layer_reader
 
 raster_max_lat = int(os.getenv("RASTER_MAX_LAT"))
 raster_min_lat = int(os.getenv("RASTER_MIN_LAT"))
@@ -24,13 +22,8 @@ def indices_to_lat_lon(lat_index, lon_index):
 
 
 def get_layer_from_file(output_file, dataset):
-    # save np.load
-    np_load_old = np.load
-    # modify the default parameters of np.load
-    np.load = lambda *a, **k: np_load_old(*a, allow_pickle=True, **k)
-
     if os.path.exists(output_file):
-        return np.load(output_file)
+        return np.load(output_file, allow_pickle=True)
     else:
         metadata = {'lat_NW_cell_center': raster_max_lat,
                     'lon_NW_cell_center': raster_min_lon,
