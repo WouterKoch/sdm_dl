@@ -21,67 +21,6 @@ def indices_to_lat_lon(lat_index, lon_index):
             lon_index + .5) * raster_cell_size_deg + raster_min_lon
 
 
-def get_layer_from_file(output_file, dataset):
-    if os.path.exists(output_file):
-        return np.load(output_file, allow_pickle=True)
-    else:
-        metadata = {'lat_NW_cell_center': raster_max_lat,
-                    'lon_NW_cell_center': raster_min_lon,
-                    'cell_size_degrees': raster_cell_size_deg}
-
-        if dataset == 'esacci':
-            metadata['data_type'] = 'categorical'
-            metadata['data_categories'] = [10, 11, 12, 20, 30, 40, 50, 60, 61, 62, 70, 71, 72, 80, 81, 82, 90, 100, 110,
-                                           120, 121, 122, 130, 140, 150,
-                                           151, 152, 153, 160, 170, 180, 190, 200, 201, 202, 210, 220]
-        else:
-            metadata['data_type'] = 'numerical'
-            metadata['normalization_range'] = (99999999998, -99999999998)
-        metadata['null_value'] = -99999999999
-
-        raster_width = int((raster_max_lon - raster_min_lon) / raster_cell_size_deg)
-        raster_height = int((raster_max_lat - raster_min_lat) / raster_cell_size_deg)
-
-        return {'map': np.ones((raster_width, raster_height)) * np.nan,
-                'metadata': metadata}
-
-
-def get_layer_reader(layer):
-    if layer == 'elevation':
-        return elevation_layer_reader
-    elif layer == 'bioclim':
-        return bioclim_layer_reader
-    elif layer == 'worldclim':
-        return worldclim_layer_reader
-    elif layer == 'esacci':
-        return esacci_layer_reader
-
-
-def get_layer_names(dataset, date):
-    if dataset == 'bioclim' or dataset == 'worldclim' or dataset == 'esacci':
-        layer_reader = get_layer_reader(dataset)
-        return layer_reader.get_layer_names(date)
-    else:  # lat, lon, elevation
-        return [dataset]
-
-
-def get_layer(dataset, layer_name):
-    layer_object = {}
-
-    filename = os.path.join(os.getenv("RASTER_CACHE_FOLDER_PATH"), dataset, layer_name + '.npz')
-    layer = get_layer_from_file(filename, dataset)
-
-    layer_object['map'] = layer['map']
-    layer_object['filename'] = filename
-
-    if isinstance(layer['metadata'], dict):
-        layer_object['metadata'] = layer['metadata']
-    else:
-        layer_object['metadata'] = layer['metadata'].item()
-
-    return layer_object
-
-
 def load_block(map, lat_start, lon_start, block_size):
     return map[lat_start:lat_start + block_size, lon_start:lon_start + block_size]
 
@@ -96,20 +35,19 @@ def to_start_index(center, block_size):
     return center - int(block_size / 2)
 
 
-def get_blocks(occurrences, block_size, dataset):
-    layer_reader = get_layer_reader(dataset)
+def get_blocks(occurrences, block_size, layer_reader):
     results = [{}] * len(occurrences)
     per_layer = {}
 
     for occ_index, occurrence in tqdm(enumerate(occurrences)):
-        layer_names = get_layer_names(dataset, occurrence[2])
+        layer_names = layer_reader.get_layer_names(occurrence[2])
         for layer_name in layer_names:
             if layer_name not in per_layer:
                 per_layer[layer_name] = {}
             per_layer[layer_name][occ_index] = occurrence
 
     for layer_name, layer_occurrences in per_layer.items():
-        layer = get_layer(dataset, layer_name)
+        layer = layer_reader.get_layer(layer_name)
         incomplete_blocks = []
         incomplete_ids = []
         for occ_index, occurrence in layer_occurrences.items():

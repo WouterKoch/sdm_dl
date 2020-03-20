@@ -27,6 +27,44 @@ def get_layer_names(_):
             'BioClim_15', 'BioClim_16', 'BioClim_17', 'BioClim_18', 'BioClim_19']
 
 
+def get_layer_from_file(output_file):
+    raster_max_lat = int(os.getenv("RASTER_MAX_LAT"))
+    raster_min_lat = int(os.getenv("RASTER_MIN_LAT"))
+    raster_max_lon = int(os.getenv("RASTER_MAX_LON"))
+    raster_min_lon = int(os.getenv("RASTER_MIN_LON"))
+    raster_cell_size_deg = float(os.getenv("RASTER_CELL_SIZE_DEG"))
+
+    if os.path.exists(output_file):
+        return np.load(output_file, allow_pickle=True)
+
+    metadata = {'lat_NW_cell_center': raster_max_lat, 'lon_NW_cell_center': raster_min_lon,
+                'cell_size_degrees': raster_cell_size_deg, 'data_type': 'numerical',
+                'normalization_range': (99999999998, -99999999998), 'null_value': -99999999999}
+
+    raster_width = int((raster_max_lon - raster_min_lon) / raster_cell_size_deg)
+    raster_height = int((raster_max_lat - raster_min_lat) / raster_cell_size_deg)
+
+    return {'map': np.ones((raster_width, raster_height)) * np.nan,
+            'metadata': metadata}
+
+
+def get_layer(layer_name):
+    layer_object = {}
+
+    filename = os.path.join(os.getenv("RASTER_CACHE_FOLDER_PATH"), 'bioclim', layer_name + '.npz')
+    layer = get_layer_from_file(filename)
+
+    layer_object['map'] = layer['map']
+    layer_object['filename'] = filename
+
+    if isinstance(layer['metadata'], dict):
+        layer_object['metadata'] = layer['metadata']
+    else:
+        layer_object['metadata'] = layer['metadata'].item()
+
+    return layer_object
+
+
 def fill_blocks(layer_name, to_fetch, cell_size_degrees):
     for block in to_fetch:
         if block != None:

@@ -13,6 +13,46 @@ def get_layer_names(date):
     return ['ESA_CCI_' + year]
 
 
+def get_layer_from_file(output_file):
+    raster_max_lat = int(os.getenv("RASTER_MAX_LAT"))
+    raster_min_lat = int(os.getenv("RASTER_MIN_LAT"))
+    raster_max_lon = int(os.getenv("RASTER_MAX_LON"))
+    raster_min_lon = int(os.getenv("RASTER_MIN_LON"))
+    raster_cell_size_deg = float(os.getenv("RASTER_CELL_SIZE_DEG"))
+
+    if os.path.exists(output_file):
+        return np.load(output_file, allow_pickle=True)
+
+    metadata = {'lat_NW_cell_center': raster_max_lat, 'lon_NW_cell_center': raster_min_lon,
+                'cell_size_degrees': raster_cell_size_deg, 'data_type': 'categorical',
+                'data_categories': [10, 11, 12, 20, 30, 40, 50, 60, 61, 62, 70, 71, 72, 80, 81, 82, 90, 100, 110, 120,
+                                    121, 122, 130, 140, 150, 151, 152, 153, 160, 170, 180, 190, 200, 201, 202, 210,
+                                    220], 'null_value': -99999999999}
+
+    raster_width = int((raster_max_lon - raster_min_lon) / raster_cell_size_deg)
+    raster_height = int((raster_max_lat - raster_min_lat) / raster_cell_size_deg)
+
+    return {'map': np.ones((raster_width, raster_height)) * np.nan,
+            'metadata': metadata}
+
+
+def get_layer(layer_name):
+    layer_object = {}
+
+    filename = os.path.join(os.getenv("RASTER_CACHE_FOLDER_PATH"), 'esacci', layer_name + '.npz')
+    layer = get_layer_from_file(filename)
+
+    layer_object['map'] = layer['map']
+    layer_object['filename'] = filename
+
+    if isinstance(layer['metadata'], dict):
+        layer_object['metadata'] = layer['metadata']
+    else:
+        layer_object['metadata'] = layer['metadata'].item()
+
+    return layer_object
+
+
 def get_array(path, year):
     if year < 2016:
         tif_file = gdal.Open(os.path.join(path, 'ESACCI-LC-L4-LCCS-Map-300m-P1Y-' + str(year) + '-v2.0.7.tif'))
