@@ -37,7 +37,6 @@ def get_layer_from_file(layer_name):
     layer = {}
 
     if os.path.exists(filename):
-        print("opening file")
         layer = dict(np.load(filename, allow_pickle=True))
         layer['metadata'] = layer['metadata'].item()
     else:
