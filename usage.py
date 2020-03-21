@@ -18,8 +18,8 @@ os.environ["BIOCLIM_FOLDER_PATH"] = "/home/wouter/Projects/Naturalis/environment
 os.environ["RASTER_CACHE_FOLDER_PATH"] = "/home/wouter/Projects/Naturalis/environment/sdm_dl_cache"
 
 import get_environmental_layer as get_env
-from layer_readers import esa_cci as layer_reader
 
+from layer_readers import worldclim as layer_reader
 maps = get_env.get_blocks([(52.7, 5.1, datetime(2012, 1, 6))], 25, layer_reader)
 
 for position in maps:

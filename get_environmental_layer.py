@@ -47,7 +47,7 @@ def get_blocks(occurrences, block_size, layer_reader):
             per_layer[layer_name][occ_index] = occurrence
 
     for layer_name, layer_occurrences in per_layer.items():
-        layer = layer_reader.get_layer(layer_name)
+        layer = layer_reader.get_layer_from_file(layer_name)
         incomplete_blocks = []
         incomplete_ids = []
         for occ_index, occurrence in layer_occurrences.items():
