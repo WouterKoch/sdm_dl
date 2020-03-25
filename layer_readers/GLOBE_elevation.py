@@ -40,8 +40,8 @@ def get_layer_from_file(layer_name):
         layer = dict(np.load(filename, allow_pickle=True))
         layer['metadata'] = layer['metadata'].item()
     else:
-        raster_width = int((raster_max_lon - raster_min_lon) / raster_cell_size_deg)
-        raster_height = int((raster_max_lat - raster_min_lat) / raster_cell_size_deg)
+        raster_width = int((raster_max_lon - raster_min_lon) / raster_cell_size_deg) + 1
+        raster_height = int((raster_max_lat - raster_min_lat) / raster_cell_size_deg) + 1
         layer['metadata'] = {'lat_NW_cell_center': raster_max_lat, 'lon_NW_cell_center': raster_min_lon,
                              'cell_size_degrees': raster_cell_size_deg, 'data_type': 'numerical',
                              'normalization_range': (99999999998, -99999999998), 'null_value': -99999999999}
