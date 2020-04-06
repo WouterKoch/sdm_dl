@@ -8,13 +8,9 @@ import os.path
 from osgeo import gdal
 import numpy as np
 
-
-#bioclim_variables = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16',
-#                     '17', '18', '19']
-
 baltic_years = list(range(1991,2018))
 
-#perhaps from .txt file?
+#perhaps from .txt file? / get_layer_names kind of does the same?
 baltic_vars = ['Clupea_harengus_JUV','Clupea_harengus_SA','Clupea_harengus_LA','Gadus_morhua_JUV','Gadus_morhua_SA',
                'Gadus_morhua_LA', 'Sprattus_sprattus_JUV','Sprattus_sprattus_SA','Sprattus_sprattus_LA', 'TEMP', 'SALIN',
                'TOTOXY','TOTP','TOTN','SIO4','NO3N','NH4N','COPEPOD']
@@ -40,15 +36,16 @@ def get_value_from_array(lat, lon, cci_array, array_height, array_width):
         return np.nan
     return value
 
-
-### What to do with this function as for baltic case there are so many layer names? But all in separate raster maps,
-### Can this be done from txt file listing all layers instead?
-def get_layer_names(_):
-    return ['BioClim_01', 'BioClim_02', 'BioClim_03', 'BioClim_04', 'BioClim_05', 'BioClim_06', 'BioClim_07',
-            'BioClim_08', 'BioClim_09', 'BioClim_10', 'BioClim_11', 'BioClim_12', 'BioClim_13', 'BioClim_14',
-            'BioClim_15', 'BioClim_16', 'BioClim_17', 'BioClim_18', 'BioClim_19']
-
-
+#works if you place all intended layers/raster maps for your project in same directory and year is mentioned in filename
+#example year is given
+def get_layer_names(path, suffix='.tif',year='1991'):
+    filenames = os.listdir(path)
+    layer_names = []
+    for fn in filenames:
+        fn = fn.replace(suffix,'')
+        layer_names.append(fn)
+    return [ layer_name for layer_name in layer_names if year in layer_name ]
+    
 def get_layer_from_file(layer_name):
     filename = os.path.join(os.getenv("RASTER_CACHE_FOLDER_PATH"), 'baltic', layer_name + '.npz')
 
