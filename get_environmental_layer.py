@@ -2,9 +2,6 @@ from tqdm import tqdm
 import os.path
 import numpy as np
 
-from layer_readers import bioclim as bioclim_layer_reader, GLOBE_elevation as elevation_layer_reader, \
-    esa_cci as esacci_layer_reader, worldclim as worldclim_layer_reader
-
 raster_max_lat = int(os.getenv("RASTER_MAX_LAT"))
 raster_min_lat = int(os.getenv("RASTER_MIN_LAT"))
 raster_max_lon = int(os.getenv("RASTER_MAX_LON"))
@@ -58,15 +55,18 @@ def get_blocks(occurrences, block_size, layer_reader):
             results[occ_index][layer_name] = load_block(layer['map'], to_start_index(lat_index, block_size),
                                                         to_start_index(lon_index, block_size), block_size)
 
+            # if some values were not present in the cache, remember this block as being incomplete
             if np.isnan(np.sum(results[occ_index][layer_name])):
                 results[occ_index][layer_name][
                     results[occ_index][layer_name] == layer['metadata']['null_value']] = np.nan
                 incomplete_ids += [occ_index]
                 incomplete_blocks += [{'block': results[occ_index][layer_name], 'lat_lon_start': (lat, lon)}]
 
+        # fill the incomplete blocks, if any
         completed_blocks = layer_reader.fill_blocks(layer_name, incomplete_blocks,
                                                     layer['metadata']['cell_size_degrees'])
 
+        # add the previously incomplete blocks, update metadata such as the min-max range, and write to file
         for block_index, completed_block in enumerate(completed_blocks):
             occ_index = incomplete_ids[block_index]
 

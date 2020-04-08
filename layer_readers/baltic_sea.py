@@ -17,16 +17,16 @@ baltic_vars = ['Clupea_harengus_JUV','Clupea_harengus_SA','Clupea_harengus_LA','
 
 baltic_depth = ['(0, 20)','(20, 70)','(70, 460)']
 
-
-
-def get_array_from_tif(path, year, var, depth):
-    if depth != None
-        ds = gdal.Open(os.path.join(path, '{}_{}_{}_cut.tif'.format(year,var,depth)))
-        band = ds.GetRasterBand(1)
-    else:
-        ds = gdal.Open(os.path.join(path, '{}_{}_cut.tif'.format(year,var)))
+def get_array_from_tif(_, baltic_variable):
+    path = os.environ["BALTIC_FILE_PATH"]
+    a = os.path.join(path, baltic_variable + '.tif')
+    ds = gdal.Open(os.path.join(path, baltic_variable + '.tif'))
+    band = ds.GetRasterBand(1)
+    b_array = band.ReadAsArray()
+    b_stats = [np.min(b_array),np.max(b_array),"shape: {}".format(np.shape(b_array))]
+    print(a)
+    print(b_stats)
     return band.ReadAsArray()
-
 
 def get_value_from_array(lat, lon, cci_array, array_height, array_width):
     lat_pos = int((array_height / 2) - (lat * (array_height / 180)))
@@ -36,16 +36,17 @@ def get_value_from_array(lat, lon, cci_array, array_height, array_width):
         return np.nan
     return value
 
-#works if you place all intended layers/raster maps for your project in same directory and year is mentioned in filename
-#example year is given
-def get_layer_names(path, suffix='.tif',year='1991'):
-    filenames = os.listdir(path)
+def get_layer_names(time):
+    filenames = os.listdir(os.environ["BALTIC_FILE_PATH"])
+    suffix = '.tif'
+    year = str(time.year)
     layer_names = []
+
     for fn in filenames:
-        fn = fn.replace(suffix,'')
+        fn = fn.replace(suffix, '')
         layer_names.append(fn)
-    return [ layer_name for layer_name in layer_names if year in layer_name ]
-    
+    return [layer_name for layer_name in layer_names if year in layer_name]
+
 def get_layer_from_file(layer_name):
     filename = os.path.join(os.getenv("RASTER_CACHE_FOLDER_PATH"), 'baltic', layer_name + '.npz')
 
@@ -60,6 +61,7 @@ def get_layer_from_file(layer_name):
     if os.path.exists(filename):
         layer = dict(np.load(filename, allow_pickle=True))
         layer['metadata'] = layer['metadata'].item()
+        print(layer['metadata'])
     else:
         raster_width = int((raster_max_lon - raster_min_lon) / raster_cell_size_deg) + 1
         raster_height = int((raster_max_lat - raster_min_lat) / raster_cell_size_deg) + 1
@@ -79,7 +81,8 @@ def fill_blocks(layer_name, to_fetch, cell_size_degrees):
         return [None] * len(to_fetch)
 
     path = os.getenv("BALTIC_FOLDER_PATH")
-    array = get_array_from_tif(path, layer_name[-2:])
+    print(layer_name)
+    array = get_array_from_tif(path, layer_name)#[-2:])
     array_height, array_width = array.shape
 
     result = []
@@ -102,4 +105,5 @@ def fill_blocks(layer_name, to_fetch, cell_size_degrees):
         result += [block]
 
     return result
+
 
