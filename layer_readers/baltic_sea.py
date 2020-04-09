@@ -61,7 +61,7 @@ def get_layer_from_file(layer_name):
     if os.path.exists(filename):
         layer = dict(np.load(filename, allow_pickle=True))
         layer['metadata'] = layer['metadata'].item()
-        print(layer['metadata'])
+        #print(layer['metadata'])
     else:
         raster_width = int((raster_max_lon - raster_min_lon) / raster_cell_size_deg) + 1
         raster_height = int((raster_max_lat - raster_min_lat) / raster_cell_size_deg) + 1
@@ -81,10 +81,10 @@ def fill_blocks(layer_name, to_fetch, cell_size_degrees):
         return [None] * len(to_fetch)
 
     path = os.getenv("BALTIC_FOLDER_PATH")
-    print(layer_name)
+    #print(layer_name)
     array = get_array_from_tif(path, layer_name)#[-2:])
     array_height, array_width = array.shape
-
+    #print(array.shape)
     result = []
 
     for block_index in range(len(to_fetch)):
@@ -97,6 +97,7 @@ def fill_blocks(layer_name, to_fetch, cell_size_degrees):
 
         for row in range(block_height):
             for col in range(block_width):
+                #print(row,col)
                 if np.isnan(block[row, col]):
                     block[row, col] = get_value_from_array(lat_start - (row * cell_size_degrees),
                                                            lon_start + (col * cell_size_degrees), array,
