@@ -1,21 +1,13 @@
 from tqdm import tqdm
 import os.path
 import numpy as np
+from tools import rastermap
 
 raster_max_lat = int(os.getenv("RASTER_MAX_LAT"))
 raster_min_lat = int(os.getenv("RASTER_MIN_LAT"))
 raster_max_lon = int(os.getenv("RASTER_MAX_LON"))
 raster_min_lon = int(os.getenv("RASTER_MIN_LON"))
 raster_cell_size_deg = float(os.getenv("RASTER_CELL_SIZE_DEG"))
-
-
-def lat_lon_to_indices(lat, lon):
-    return int((raster_max_lat - lat) / raster_cell_size_deg), int((lon - raster_min_lon) / raster_cell_size_deg)
-
-
-def indices_to_lat_lon(lat_index, lon_index):
-    return raster_max_lat - (lat_index + .5) * raster_cell_size_deg, (
-            lon_index + .5) * raster_cell_size_deg + raster_min_lon
 
 
 def load_block(map, lat_start, lon_start, block_size):
@@ -26,10 +18,6 @@ def save_block(layer_map, lat_start_index, lon_start_index, block):
     block_height, block_width = block.shape
     layer_map[lat_start_index:lat_start_index + block_height, lon_start_index:lon_start_index + block_width] = block
     return layer_map
-
-
-def to_start_index(center, block_size):
-    return center - int(block_size / 2)
 
 
 def get_blocks(occurrences, block_size, layer_reader):
@@ -49,11 +37,11 @@ def get_blocks(occurrences, block_size, layer_reader):
         incomplete_ids = []
         for occ_index, occurrence in layer_occurrences.items():
             lat, lon, _ = occurrence
-            lat_index, lon_index = lat_lon_to_indices(lat, lon)
-            lat, lon = indices_to_lat_lon(to_start_index(lat_index, block_size), to_start_index(lon_index, block_size))
+            lat_index, lon_index = rastermap.lat_lon_to_indices(lat, lon)
+            lat, lon = rastermap.indices_to_lat_lon(rastermap.to_start_index(lat_index, block_size), rastermap.to_start_index(lon_index, block_size))
 
-            results[occ_index][layer_name] = load_block(layer['map'], to_start_index(lat_index, block_size),
-                                                        to_start_index(lon_index, block_size), block_size)
+            results[occ_index][layer_name] = load_block(layer['map'], rastermap.to_start_index(lat_index, block_size),
+                                                        rastermap.to_start_index(lon_index, block_size), block_size)
 
             # if some values were not present in the cache, remember this block as being incomplete
             if np.isnan(np.sum(results[occ_index][layer_name])):
@@ -79,9 +67,9 @@ def get_blocks(occurrences, block_size, layer_reader):
             results[occ_index][layer_name] = completed_block
 
             lat, lon, _ = layer_occurrences[occ_index]
-            lat_index, lon_index = lat_lon_to_indices(lat, lon)
-            layer['map'] = save_block(layer['map'], to_start_index(lat_index, block_size),
-                                      to_start_index(lon_index, block_size),
+            lat_index, lon_index = rastermap.lat_lon_to_indices(lat, lon)
+            layer['map'] = save_block(layer['map'], rastermap.to_start_index(lat_index, block_size),
+                                      rastermap.to_start_index(lon_index, block_size),
                                       completed_block)
         os.makedirs(os.path.dirname(layer['filename']), exist_ok=True)
         np.savez(layer['filename'], map=layer['map'], metadata=layer['metadata'])
