@@ -23,8 +23,6 @@ os.environ["RASTER_CACHE_FOLDER_PATH"] = "/{}/Projects/Naturalis/environment/sdm
 from tools import pseudoabsence
 pseudo_absences = pseudoabsence.generate([(52.14, 9.48), (53, 10), (55, 22)], .5, 5000)
 
-quit()
-
 import get_environmental_layer as get_env
 from layer_readers import baltic_sea as layer_reader
 
