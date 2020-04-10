@@ -20,8 +20,12 @@ os.environ["BIOCLIM_FOLDER_PATH"] = "/{}/Projects/Naturalis/environment/BioClim"
 
 os.environ["RASTER_CACHE_FOLDER_PATH"] = "/{}/Projects/Naturalis/environment/sdm_dl_cache".format(user)
 
-import get_environmental_layer as get_env
+from tools import pseudoabsence
+pseudo_absences = pseudoabsence.generate([(52.14, 9.48), (53, 10), (55, 22)], .5, 5000)
 
+quit()
+
+import get_environmental_layer as get_env
 from layer_readers import baltic_sea as layer_reader
 
 maps = get_env.get_blocks([(56.1, 12, datetime(1991, 1, 6))], 25, layer_reader)
