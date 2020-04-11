@@ -37,7 +37,7 @@ def get_layer_from_file(layer_name):
                                                  121, 122, 130, 140, 150, 151, 152, 153, 160, 170, 180, 190, 200, 201,
                                                  202, 210,
                                                  220], 'null_value': -99999999999}
-        layer['map'] = np.ones((raster_width, raster_height)) * np.nan
+        layer['map'] = np.ones((raster_height, raster_width)) * np.nan
 
     layer['filename'] = filename
     return layer

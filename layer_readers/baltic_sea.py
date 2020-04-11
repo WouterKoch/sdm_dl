@@ -68,7 +68,7 @@ def get_layer_from_file(layer_name):
         layer['metadata'] = {'lat_NW_cell_center': raster_max_lat, 'lon_NW_cell_center': raster_min_lon,
                              'cell_size_degrees': raster_cell_size_deg, 'data_type': 'numerical',
                              'normalization_range': (99999999998, -99999999998), 'null_value': -99999999999}
-        layer['map'] = np.ones((raster_width, raster_height)) * np.nan
+        layer['map'] = np.ones((raster_height, raster_width)) * np.nan
 
     layer['filename'] = filename
     return layer

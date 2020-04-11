@@ -2,13 +2,14 @@ import os
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-user = 'Users/markrademaker'  # 'home/wouter'
+# user = 'Users/markrademaker'
+user = 'home/wouter'
 
 # Remember to set the environment variables
-os.environ["RASTER_MAX_LAT"] = "60"
-os.environ["RASTER_MIN_LAT"] = "52"
+os.environ["RASTER_MAX_LAT"] = "66"
+os.environ["RASTER_MIN_LAT"] = "58"
 os.environ["RASTER_MIN_LON"] = "9"
-os.environ["RASTER_MAX_LON"] = "24"
+os.environ["RASTER_MAX_LON"] = "11"
 os.environ["RASTER_CELL_SIZE_DEG"] = str(1 / 120)
 os.environ["PROJECT_ROOT"] = "/{}/Projects/Naturalis/sdm_dl".format(user)
 
@@ -21,19 +22,19 @@ os.environ["BIOCLIM_FOLDER_PATH"] = "/{}/Projects/Naturalis/environment/BioClim"
 os.environ["RASTER_CACHE_FOLDER_PATH"] = "/{}/Projects/Naturalis/environment/sdm_dl_cache".format(user)
 
 from tools import pseudoabsence
-pseudo_absences = pseudoabsence.generate([(52.14, 9.48), (53, 10), (55, 22)], .5, 5000)
+pseudo_absences = pseudoabsence.generate([(62.14, 9.48), (63, 10), (65, 11)], .5, 5000)
 
 import get_environmental_layer as get_env
-from layer_readers import baltic_sea as layer_reader
+from layer_readers import GLOBE_elevation as layer_reader
 
-maps = get_env.get_blocks([(56.1, 12, datetime(1991, 1, 6))], 25, layer_reader)
+maps = get_env.get_blocks([(63.3, 10, datetime(1991, 1, 6))], 200, layer_reader)
 
 for position in maps:
     for name, map in position.items():
         fig, ax = plt.subplots()
-        im = ax.imshow(map, cmap=plt.get_cmap('hot'))
-        print(map)
-        fig.colorbar(im)
+        im = ax.imshow(map, cmap=plt.get_cmap('viridis'))
+        # print(map)
         # plt.imshow(map)
         plt.title(name)
         plt.show()
+
