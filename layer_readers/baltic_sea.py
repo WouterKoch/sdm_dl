@@ -19,13 +19,8 @@ baltic_depth = ['(0, 20)','(20, 70)','(70, 460)']
 
 def get_array_from_tif(_, baltic_variable):
     path = os.environ["BALTIC_FILE_PATH"]
-    a = os.path.join(path, baltic_variable + '.tif')
     ds = gdal.Open(os.path.join(path, baltic_variable + '.tif'))
     band = ds.GetRasterBand(1)
-    b_array = band.ReadAsArray()
-    b_stats = [np.min(b_array),np.max(b_array),"shape: {}".format(np.shape(b_array))]
-    print(a)
-    print(b_stats)
     return band.ReadAsArray()
 
 def get_value_from_array(lat, lon, cci_array, array_height, array_width):
@@ -35,6 +30,20 @@ def get_value_from_array(lat, lon, cci_array, array_height, array_width):
     if value < -1000000:
         return np.nan
     return value
+
+def get_label(layer_name,occurrence):
+    path = os.getenv("BALTIC_FOLDER_PATH")
+    array = get_array_from_tif(path, layer_name)
+
+    lat = int(occurrence[0])
+    lon = int(occurrence[1])
+
+    array_height, array_width = array.shape
+    lat_pos = int((array_height / 2) - (lat * (array_height / 180)))
+    lon_pos = int((array_width / 2) + (lon * (array_width / 360)))
+
+    label_value = array[lat_pos][lon_pos]
+    return label_value
 
 def get_layer_names(time):
     filenames = os.listdir(os.environ["BALTIC_FILE_PATH"])
@@ -61,7 +70,6 @@ def get_layer_from_file(layer_name):
     if os.path.exists(filename):
         layer = dict(np.load(filename, allow_pickle=True))
         layer['metadata'] = layer['metadata'].item()
-        #print(layer['metadata'])
     else:
         raster_width = int((raster_max_lon - raster_min_lon) / raster_cell_size_deg) + 1
         raster_height = int((raster_max_lat - raster_min_lat) / raster_cell_size_deg) + 1
@@ -81,10 +89,8 @@ def fill_blocks(layer_name, to_fetch, cell_size_degrees):
         return [None] * len(to_fetch)
 
     path = os.getenv("BALTIC_FOLDER_PATH")
-    #print(layer_name)
     array = get_array_from_tif(path, layer_name)#[-2:])
     array_height, array_width = array.shape
-    #print(array.shape)
     result = []
 
     for block_index in range(len(to_fetch)):
@@ -97,14 +103,11 @@ def fill_blocks(layer_name, to_fetch, cell_size_degrees):
 
         for row in range(block_height):
             for col in range(block_width):
-                #print(row,col)
                 if np.isnan(block[row, col]):
                     block[row, col] = get_value_from_array(lat_start - (row * cell_size_degrees),
                                                            lon_start + (col * cell_size_degrees), array,
                                                            array_height,
                                                            array_width)
         result += [block]
-
     return result
-
 

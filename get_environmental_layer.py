@@ -54,6 +54,10 @@ def get_blocks(occurrences, block_size, layer_reader):
         completed_blocks = layer_reader.fill_blocks(layer_name, incomplete_blocks,
                                                     layer['metadata']['cell_size_degrees'])
 
+        #Extract label
+        layer['label'] = layer_reader.get_label(layer_name,occurrence)
+
+
         # add the previously incomplete blocks, update metadata such as the min-max range, and write to file
         for block_index, completed_block in enumerate(completed_blocks):
             occ_index = incomplete_ids[block_index]
@@ -72,7 +76,7 @@ def get_blocks(occurrences, block_size, layer_reader):
                                       rastermap.to_start_index(lon_index, block_size),
                                       completed_block)
         os.makedirs(os.path.dirname(layer['filename']), exist_ok=True)
-        np.savez(layer['filename'], map=layer['map'], metadata=layer['metadata'])
+        np.savez(layer['filename'], map=layer['map'], metadata=layer['metadata'], label=layer['label'])
 
         if layer['metadata']['data_type'] != 'categorical':
             min_, max_ = layer['metadata']['normalization_range']
