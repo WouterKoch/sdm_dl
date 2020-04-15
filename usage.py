@@ -22,7 +22,8 @@ os.environ["BIOCLIM_FOLDER_PATH"] = "/{}/Projects/Naturalis/environment/BioClim"
 os.environ["RASTER_CACHE_FOLDER_PATH"] = "/{}/Projects/Naturalis/environment/sdm_dl_cache".format(user)
 
 from tools import pseudoabsence
-pseudo_absences = pseudoabsence.generate([(62.14, 9.48), (63, 10), (65, 11)], .5, 5000)
+
+pseudo_absences = pseudoabsence.generate([(62.14, 9.48), (63, 10), (65, 11)], .5, 1, 500)
 
 import get_environmental_layer as get_env
 from layer_readers import GLOBE_elevation as layer_reader
@@ -37,4 +38,3 @@ for position in maps:
         # plt.imshow(map)
         plt.title(name)
         plt.show()
-
