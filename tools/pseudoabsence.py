@@ -28,13 +28,12 @@ def set_availabilities(raster, presences, radius_deg, value):
 
         x_corner = rastermap.to_start_index(x_center, block_size)
         y_corner = rastermap.to_start_index(y_center, block_size)
-        for x in range(x_corner, x_corner + block_size):
-            for y in range(y_corner, y_corner + block_size):
+        for x in range(max(0, x_corner), min(x_corner + block_size, raster_width - 1)):
+            for y in range(max(0, y_corner), min(y_corner + block_size, raster_height - 1)):
                 lat_cell, lon_cell = rastermap.indices_to_lat_lon(y, x)
-                # check if the corner of this cell that is closest to the observation point is within the buffer radius
-                if y >= 0 and y < raster_height and x >= 0 and x < raster_width and math.sqrt(
-                        (abs(lat - lat_cell) - (raster_cell_size_deg / 2)) ** 2 + (
-                                abs(lon - lon_cell) - (raster_cell_size_deg / 2)) ** 2) <= radius_deg:
+                # check if the corner of this cell that is closest to the observation point is within the radius
+                if math.sqrt((abs(lat - lat_cell) - (raster_cell_size_deg / 2)) ** 2 + (
+                        abs(lon - lon_cell) - (raster_cell_size_deg / 2)) ** 2) <= radius_deg:
                     raster[y][x] = value
     return raster
 
