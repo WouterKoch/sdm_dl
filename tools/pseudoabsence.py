@@ -20,9 +20,9 @@ def set_availabilities(raster, presences, radius_deg, value):
 
     for presence in presences:
         # Back and forth to make sure the coordinate is in the middle
-        lat, lon = presence
+        lat, lon, _ = presence
         y_center, x_center = rastermap.lat_lon_to_indices(
-            *rastermap.indices_to_lat_lon(*rastermap.lat_lon_to_indices(*presence)))
+            *rastermap.indices_to_lat_lon(*rastermap.lat_lon_to_indices(lat, lon)))
 
         raster[y_center][x_center] = value
 

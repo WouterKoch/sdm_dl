@@ -8,20 +8,23 @@ import os.path
 from osgeo import gdal
 import numpy as np
 
-baltic_years = list(range(1991,2018))
+baltic_years = list(range(1991, 2018))
 
-#perhaps from .txt file? / get_layer_names kind of does the same?
-baltic_vars = ['Clupea_harengus_JUV','Clupea_harengus_SA','Clupea_harengus_LA','Gadus_morhua_JUV','Gadus_morhua_SA',
-               'Gadus_morhua_LA', 'Sprattus_sprattus_JUV','Sprattus_sprattus_SA','Sprattus_sprattus_LA', 'TEMP', 'SALIN',
-               'TOTOXY','TOTP','TOTN','SIO4','NO3N','NH4N','COPEPOD']
+# perhaps from .txt file? / get_layer_names kind of does the same?
+baltic_vars = ['Clupea_harengus_JUV', 'Clupea_harengus_SA', 'Clupea_harengus_LA', 'Gadus_morhua_JUV', 'Gadus_morhua_SA',
+               'Gadus_morhua_LA', 'Sprattus_sprattus_JUV', 'Sprattus_sprattus_SA', 'Sprattus_sprattus_LA', 'TEMP',
+               'SALIN',
+               'TOTOXY', 'TOTP', 'TOTN', 'SIO4', 'NO3N', 'NH4N', 'COPEPOD']
 
-baltic_depth = ['(0, 20)','(20, 70)','(70, 460)']
+baltic_depth = ['(0, 20)', '(20, 70)', '(70, 460)']
+
 
 def get_array_from_tif(_, baltic_variable):
     path = os.environ["BALTIC_FILE_PATH"]
     ds = gdal.Open(os.path.join(path, baltic_variable + '.tif'))
     band = ds.GetRasterBand(1)
     return band.ReadAsArray()
+
 
 def get_value_from_array(lat, lon, cci_array, array_height, array_width):
     lat_pos = int((array_height / 2) - (lat * (array_height / 180)))
@@ -31,19 +34,6 @@ def get_value_from_array(lat, lon, cci_array, array_height, array_width):
         return np.nan
     return value
 
-def get_label(layer_name,occurrence):
-    path = os.getenv("BALTIC_FOLDER_PATH")
-    array = get_array_from_tif(path, layer_name)
-
-    lat = int(occurrence[0])
-    lon = int(occurrence[1])
-
-    array_height, array_width = array.shape
-    lat_pos = int((array_height / 2) - (lat * (array_height / 180)))
-    lon_pos = int((array_width / 2) + (lon * (array_width / 360)))
-
-    label_value = array[lat_pos][lon_pos]
-    return label_value
 
 def get_layer_names(time):
     filenames = os.listdir(os.environ["BALTIC_FILE_PATH"])
@@ -55,6 +45,7 @@ def get_layer_names(time):
         fn = fn.replace(suffix, '')
         layer_names.append(fn)
     return [layer_name for layer_name in layer_names if year in layer_name]
+
 
 def get_layer_from_file(layer_name):
     filename = os.path.join(os.getenv("RASTER_CACHE_FOLDER_PATH"), 'baltic', layer_name + '.npz')
@@ -89,7 +80,7 @@ def fill_blocks(layer_name, to_fetch, cell_size_degrees):
         return [None] * len(to_fetch)
 
     path = os.getenv("BALTIC_FOLDER_PATH")
-    array = get_array_from_tif(path, layer_name)#[-2:])
+    array = get_array_from_tif(path, layer_name)  # [-2:])
     array_height, array_width = array.shape
     result = []
 
@@ -110,4 +101,3 @@ def fill_blocks(layer_name, to_fetch, cell_size_degrees):
                                                            array_width)
         result += [block]
     return result
-
