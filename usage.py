@@ -6,10 +6,10 @@ from datetime import datetime
 user = 'home/wouter'
 
 # Remember to set the environment variables
-os.environ["RASTER_MAX_LAT"] = "66"
-os.environ["RASTER_MIN_LAT"] = "58"
-os.environ["RASTER_MIN_LON"] = "9"
-os.environ["RASTER_MAX_LON"] = "11"
+os.environ["RASTER_MAX_LAT"] = "72"
+os.environ["RASTER_MIN_LAT"] = "50"
+os.environ["RASTER_MIN_LON"] = "3"
+os.environ["RASTER_MAX_LON"] = "33"
 os.environ["RASTER_CELL_SIZE_DEG"] = str(1 / 120)
 os.environ["PROJECT_ROOT"] = "/{}/Projects/Naturalis/sdm_dl".format(user)
 
@@ -25,7 +25,10 @@ from tools import pseudoabsence
 import get_environmental_layer as get_env
 from layer_readers import GLOBE_elevation as layer_reader
 
-presences = [(63.3, 10, datetime(1991, 1, 6))]
+
+from tools import dwca_reader
+presences = dwca_reader.zip_to_presences('/home/wouter/Projects/Naturalis/datasets/GBIF_sphagnum_2019-09-30.zip')
+# presences = [(63.3, 10, datetime(1991, 1, 6))]
 
 pseudo_absences = pseudoabsence.generate(presences, .5, 1, 500)
 maps = get_env.get_blocks(presences, 200, layer_reader)
