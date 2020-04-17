@@ -52,11 +52,11 @@ def get_layer_from_file(layer_name):
 
 
 def fill_blocks(_, to_fetch, cell_size_degrees):
-    result = []
+    fetched = []
 
     for block_index in range(len(to_fetch)):
         if to_fetch[block_index] == None:
-            result += [None]
+            fetched += [None]
             continue
         block = to_fetch[block_index]['block']
         block_height, block_width = block.shape
@@ -71,6 +71,6 @@ def fill_blocks(_, to_fetch, cell_size_degrees):
                                                                   lon_start + (col * cell_size_degrees),
                                                                   current_file)
                     pbar.update(1)
-        result += [block]
+        fetched += [block]
         pbar.close()
-    return result
+    return fetched

@@ -21,11 +21,12 @@ def save_block(layer_map, lat_start_index, lon_start_index, block):
 
 
 def get_blocks(occurrences, block_size, layer_reader):
-    results = [{}] * len(occurrences)
+    results = [{} for _ in range(len(occurrences))]
     per_layer = {}
 
     for occ_index, occurrence in tqdm(enumerate(occurrences)):
-        layer_names = layer_reader.get_layer_names(occurrence[2])
+        date = occurrence[2]
+        layer_names = layer_reader.get_layer_names(date)
         for layer_name in layer_names:
             if layer_name not in per_layer:
                 per_layer[layer_name] = {}
@@ -35,6 +36,7 @@ def get_blocks(occurrences, block_size, layer_reader):
         layer = layer_reader.get_layer_from_file(layer_name)
         incomplete_blocks = []
         incomplete_ids = []
+
         for occ_index, occurrence in layer_occurrences.items():
             lat, lon, _ = occurrence
             lat_index, lon_index = rastermap.lat_lon_to_indices(lat, lon)
@@ -50,8 +52,8 @@ def get_blocks(occurrences, block_size, layer_reader):
                     results[occ_index][layer_name] == layer['metadata']['null_value']] = np.nan
                 incomplete_ids += [occ_index]
                 incomplete_blocks += [{'block': results[occ_index][layer_name], 'lat_lon_start': (lat, lon)}]
-
         # fill the incomplete blocks, if any
+
         completed_blocks = layer_reader.fill_blocks(layer_name, incomplete_blocks,
                                                     layer['metadata']['cell_size_degrees'])
 
@@ -64,7 +66,10 @@ def get_blocks(occurrences, block_size, layer_reader):
                     min(layer['metadata']['normalization_range'][0], np.nanmin(completed_block)),
                     max(layer['metadata']['normalization_range'][1], np.nanmax(completed_block)))
 
-            completed_block[np.isnan(completed_block)] = layer['metadata']['null_value']
+            # completed_block[np.isnan(completed_block)] = layer['metadata']['null_value']
+
+            results[occ_index][layer_name] = completed_block
+
             results[occ_index][layer_name] = completed_block
 
             lat, lon, _ = layer_occurrences[occ_index]
@@ -81,7 +86,13 @@ def get_blocks(occurrences, block_size, layer_reader):
             for result in results:
                 if layer_name in result:
                     result[layer_name] = (result[layer_name] - ((min_ + max_) / 2)) / ((max_ - min_) / 2)
-                result[layer_name][result[layer_name] < -1] = np.nan
+                result[layer_name][result[layer_name] < -1] = None
+                # This will give a warning "RuntimeWarning: invalid value encountered in less"
+                # that's because there are missing values in the output, although that is the whole point
+                # This happens for both None and np.nan, while these are accepted as missing value notation.
+                # E.g. https://github.com/Unidata/netcdf4-python/issues/766
+                # See also https://stackoverflow.com/questions/28654325/what-is-pythons-equivalent-of-rs-na
+
         else:
             categories = layer['metadata']['data_categories']
 
@@ -90,7 +101,6 @@ def get_blocks(occurrences, block_size, layer_reader):
                     for category in categories:
                         result[layer_name + '_' + str(category)] = [list(map(lambda x: int(x == category), row)) for row
                                                                     in result[layer_name]]
-
     return results
 
 

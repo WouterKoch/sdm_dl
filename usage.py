@@ -28,16 +28,15 @@ from layer_readers import GLOBE_elevation as layer_reader
 
 from tools import dwca_reader
 presences = dwca_reader.zip_to_presences('/home/wouter/Projects/Naturalis/datasets/GBIF_sphagnum_2019-09-30.zip')
-# presences = [(63.3, 10, datetime(1991, 1, 6))]
 
 pseudo_absences = pseudoabsence.generate(presences, .5, 1, 500)
-maps = get_env.get_blocks(presences, 200, layer_reader)
+maps = get_env.get_blocks(presences, 30, layer_reader)
 
 for position in maps:
     for name, map in position.items():
         fig, ax = plt.subplots()
         im = ax.imshow(map, cmap=plt.get_cmap('viridis'))
         # print(map)
-        # plt.imshow(map)
+        plt.imshow(map)
         plt.title(name)
         plt.show()
