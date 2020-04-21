@@ -23,7 +23,6 @@ os.environ["RASTER_CACHE_FOLDER_PATH"] = "/{}/Projects/Naturalis/environment/sdm
 
 from tools import pseudoabsence
 import get_environmental_layer as get_env
-from layer_readers import GLOBE_elevation as layer_reader
 
 from tools import dwca_reader
 
@@ -34,18 +33,18 @@ df['label'] = 1
 pseudo_absences = pseudoabsence.generate(presences, .5, 1, 500)
 df_pseudo_absences = pd.DataFrame(pseudo_absences, columns=['lat', 'lon', 'datetime'])
 df_pseudo_absences['label'] = 0
-
 df = df.append(df_pseudo_absences)
 
-quit()
+locations = list(zip(df.lat, df.lon, df.datetime))
 
-maps = get_env.get_blocks(presences, 30, layer_reader)
+from layer_readers import GLOBE_elevation as layer_reader
+df['elevation'] = get_env.get_blocks(locations, 30, layer_reader)
 
-for position in maps:
-    for name, map in position.items():
-        fig, ax = plt.subplots()
-        im = ax.imshow(map, cmap=plt.get_cmap('viridis'))
-        # print(map)
-        plt.imshow(map)
-        plt.title(name)
-        plt.show()
+# for position in maps:
+#     for name, map in position.items():
+#         fig, ax = plt.subplots()
+#         im = ax.imshow(map, cmap=plt.get_cmap('viridis'))
+#         # print(map)
+#         plt.imshow(map)
+#         plt.title(name)
+#         plt.show()
