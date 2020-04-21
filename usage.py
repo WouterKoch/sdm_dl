@@ -1,6 +1,6 @@
 import os
 import matplotlib.pyplot as plt
-from datetime import datetime
+import pandas as pd
 
 # user = 'Users/markrademaker'
 user = 'home/wouter'
@@ -25,11 +25,20 @@ from tools import pseudoabsence
 import get_environmental_layer as get_env
 from layer_readers import GLOBE_elevation as layer_reader
 
-
 from tools import dwca_reader
+
 presences = dwca_reader.zip_to_presences('/home/wouter/Projects/Naturalis/datasets/GBIF_sphagnum_2019-09-30.zip')
+df = pd.DataFrame(presences, columns=['lat', 'lon', 'datetime'])
+df['label'] = 1
 
 pseudo_absences = pseudoabsence.generate(presences, .5, 1, 500)
+df_pseudo_absences = pd.DataFrame(pseudo_absences, columns=['lat', 'lon', 'datetime'])
+df_pseudo_absences['label'] = 0
+
+df = df.append(df_pseudo_absences)
+
+quit()
+
 maps = get_env.get_blocks(presences, 30, layer_reader)
 
 for position in maps:
