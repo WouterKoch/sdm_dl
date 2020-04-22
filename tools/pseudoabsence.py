@@ -61,7 +61,8 @@ def generate(presences, min_distance_deg=0, max_distance_deg=180, number=1):
     for _ in range(number):
         y, x = get_random_cell(raster_width, raster_height, available)
         available[y][x] = 5
-        pseudo_absences.append(rastermap.indices_to_lat_lon(y, x))
+        pseudo_absences.append(
+            tuple(list(rastermap.indices_to_lat_lon(y, x)) + [presences[randrange(len(presences))][2]]))
 
     import matplotlib.pyplot as plt
 
