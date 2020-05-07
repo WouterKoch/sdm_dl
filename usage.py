@@ -1,6 +1,8 @@
 import os
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
+import datetime
 
 # user = 'Users/markrademaker'
 user = 'home/wouter'
@@ -20,6 +22,8 @@ os.environ["WORLDCLIM_FOLDER_PATH"] = "/{}/Projects/Naturalis/environment/WorldC
 os.environ["BIOCLIM_FOLDER_PATH"] = "/{}/Projects/Naturalis/environment/BioClim".format(user)
 
 os.environ["RASTER_CACHE_FOLDER_PATH"] = "/{}/Projects/Naturalis/environment/sdm_dl_cache".format(user)
+output_folder = "/{}/Projects/Naturalis/datasets/sdm_dl".format(user)
+
 
 from tools import pseudoabsence
 import get_environmental_layer as get_env
@@ -30,15 +34,21 @@ presences = dwca_reader.zip_to_presences('/home/wouter/Projects/Naturalis/datase
 df = pd.DataFrame(presences, columns=['lat', 'lon', 'datetime'])
 df['label'] = 1
 
-pseudo_absences = pseudoabsence.generate(presences, .5, 1, 500)
-df_pseudo_absences = pd.DataFrame(pseudo_absences, columns=['lat', 'lon', 'datetime'])
-df_pseudo_absences['label'] = 0
-df = df.append(df_pseudo_absences)
+# pseudo_absences = pseudoabsence.generate(presences, .5, 1, 500)
+# df_pseudo_absences = pd.DataFrame(pseudo_absences, columns=['lat', 'lon', 'datetime'])
+# df_pseudo_absences['label'] = 0
+# df = df.append(df_pseudo_absences)
 
 locations = list(zip(df.lat, df.lon, df.datetime))
 
 from layer_readers import GLOBE_elevation as layer_reader
 df['elevation'] = get_env.get_blocks(locations, 30, layer_reader)
+
+df = df.drop(['lat', 'lon', 'datetime'], axis=1)
+
+output_file = os.path.join(output_folder, str(int(datetime.datetime.now().timestamp() * 100)) + '.npz');
+np.savez(output_file, label=df['label'].to_numpy(), layers=df.drop(['label'], axis=1).to_numpy())
+
 
 # for position in maps:
 #     for name, map in position.items():
