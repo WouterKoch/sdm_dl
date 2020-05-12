@@ -98,9 +98,13 @@ def get_blocks(occurrences, block_size, layer_reader):
 
             for result in results:
                 if layer_name in result:
+                    # split the category values into a new element for each category
                     for category in categories:
                         result[layer_name + '_' + str(category)] = [list(map(lambda x: int(x == category), row)) for row
                                                                     in result[layer_name]]
+                    # we don't need the original category values, since they were just split
+                    del result[layer_name]
+
     return results
 
 

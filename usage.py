@@ -34,15 +34,32 @@ presences = dwca_reader.zip_to_presences('/home/wouter/Projects/Naturalis/datase
 df = pd.DataFrame(presences, columns=['lat', 'lon', 'datetime'])
 df['label'] = 1
 
-# pseudo_absences = pseudoabsence.generate(presences, .5, 1, 500)
+df = df.head(2)
+
+# pseudo_absences = pseudoabsence.generate(presences, .5, 1, 1)
 # df_pseudo_absences = pd.DataFrame(pseudo_absences, columns=['lat', 'lon', 'datetime'])
 # df_pseudo_absences['label'] = 0
 # df = df.append(df_pseudo_absences)
 
 locations = list(zip(df.lat, df.lon, df.datetime))
 
-from layer_readers import GLOBE_elevation as layer_reader
-df['elevation'] = get_env.get_blocks(locations, 30, layer_reader)
+from layer_readers import esa_cci as layer_reader
+df['esa_cci'] = get_env.get_blocks(locations, 2, layer_reader)
+
+print(df['esa_cci'].head().tolist())
+
+
+# from layer_readers import GLOBE_elevation as layer_reader
+# df['elevation'] = get_env.get_blocks(locations, 30, layer_reader)
+#
+# from layer_readers import bioclim as layer_reader
+# df['bioclim'] = get_env.get_blocks(locations, 30, layer_reader)
+#
+# from layer_readers import worldclim as layer_reader
+# df['worldclim'] = get_env.get_blocks(locations, 30, layer_reader)
+#
+# from layer_readers import latlon as layer_reader
+# df['latlon'] = get_env.get_blocks(locations, 30, layer_reader)
 
 df = df.drop(['lat', 'lon', 'datetime'], axis=1)
 
