@@ -100,12 +100,25 @@ def get_blocks(occurrences, block_size, layer_reader):
                 if layer_name in result:
                     # split the category values into a new element for each category
                     for category in categories:
-                        result[layer_name + '_' + str(category)] = [list(map(lambda x: int(x == category), row)) for row
-                                                                    in result[layer_name]]
+                        result[layer['metadata']['data_labels'][category]] = [
+                            list(map(lambda x: int(x == category), row)) for row
+                            in result[layer_name]]
                     # we don't need the original category values, since they were just split
                     del result[layer_name]
 
     return results
+
+
+def get_blocks_as_columns(occurrences, block_size, layer_reader):
+    rows = get_blocks(occurrences, block_size, layer_reader)
+    columns = {}
+    for row_index, row in enumerate(rows):
+        for col_label, col in row.items():
+            if col_label not in columns:
+                columns[col_label] = [None for _ in range(len(rows))]
+            columns[col_label][row_index] = col
+
+    return columns
 
 
 if __name__ == "__main__":
