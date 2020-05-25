@@ -27,6 +27,12 @@ output_folder = "/{}/Projects/Naturalis/datasets/sdm_dl".format(user)
 from tools import pseudoabsence
 import get_environmental_layer as get_env
 
+from layer_readers import esa_cci
+from layer_readers import GLOBE_elevation
+from layer_readers import bioclim
+from layer_readers import worldclim
+from layer_readers import latlon
+
 from tools import dwca_reader
 
 presences = dwca_reader.zip_to_presences('/home/wouter/Projects/Naturalis/datasets/GBIF_sphagnum_2019-09-30.zip')
@@ -42,24 +48,19 @@ df = df.append(df_pseudo_absences)
 
 locations = list(zip(df.lat, df.lon, df.datetime))
 
-from layer_readers import esa_cci as layer_reader
-
+layer_reader = esa_cci.LayerReader()
 df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 3, layer_reader)), rsuffix='_esacci')
 
-from layer_readers import GLOBE_elevation as layer_reader
-
+layer_reader = GLOBE_elevation.LayerReader()
 df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 3, layer_reader)), rsuffix='_globe')
 
-from layer_readers import bioclim as layer_reader
-
+layer_reader = bioclim.LayerReader()
 df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 3, layer_reader)), rsuffix='_bioclim')
 
-from layer_readers import worldclim as layer_reader
-
+layer_reader = worldclim.LayerReader()
 df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 3, layer_reader)), rsuffix='_worldclim')
 
-from layer_readers import latlon as layer_reader
-
+layer_reader = latlon.LayerReader()
 df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 3, layer_reader)), rsuffix='_latlon')
 
 df = df.drop(['lat', 'lon', 'datetime'], axis=1)
