@@ -116,7 +116,7 @@ def get_blocks_as_columns(occurrences, block_size, layer_reader):
         for col_label, col in row.items():
             if col_label not in columns:
                 columns[col_label] = [None for _ in range(len(rows))]
-            columns[col_label][row_index] = col
+            columns[col_label][row_index] = np.array(col)
 
     return columns
 
