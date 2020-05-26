@@ -10,12 +10,6 @@ def occ_csv_reader(file, lat_col, lon_col, date_col, label_col_id):
 
         obs_list.append((df_occurrence[lat_col][obs], df_occurrence[lon_col][obs], df_occurrence[date_col][obs],[df_occurrence[label][obs] for label in label_cols]))
 
-    return obs_list
-
-#example
-path = '/Users/markrademaker/Projects/Naturalis/'
-
-obs_tuple=occ_csv_reader(path+'datasets/fish_occurrences.csv',
-               "ShootLong","ShootLat","DateTime",label_col_id=slice(6,15))
-
-print(obs_tuple[0])
+    df = pd.DataFrame.from_records(obs_list, columns=['lat', 'lon', 'datetime', 'label'])
+    #return obs_list
+    return df

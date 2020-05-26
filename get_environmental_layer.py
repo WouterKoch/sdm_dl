@@ -39,13 +39,16 @@ def get_blocks(occurrences, block_size, layer_reader):
 
         for occ_index, occurrence in layer_occurrences.items():
             lat, lon, _ = occurrence
+            #print(lat,lon)
             lat_index, lon_index = rastermap.lat_lon_to_indices(lat, lon)
+            #print(lat_index, lon_index)
             lat, lon = rastermap.indices_to_lat_lon(rastermap.to_start_index(lat_index, block_size),
                                                     rastermap.to_start_index(lon_index, block_size))
-
+            #print(lat,lon)
             results[occ_index][layer_name] = load_block(layer['map'], rastermap.to_start_index(lat_index, block_size),
                                                         rastermap.to_start_index(lon_index, block_size), block_size)
-
+            #print(load_block(layer['map'], rastermap.to_start_index(lat_index, block_size),
+            #                                            rastermap.to_start_index(lon_index, block_size), block_size))
             # if some values were not present in the cache, remember this block as being incomplete
             if np.isnan(np.sum(results[occ_index][layer_name])):
                 results[occ_index][layer_name][

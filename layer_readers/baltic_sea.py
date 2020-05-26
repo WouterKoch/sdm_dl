@@ -10,17 +10,6 @@ import numpy as np
 
 class LayerReader:
 
-
-    baltic_years = list(range(1991, 2018))
-
-    # perhaps from .txt file? / get_layer_names kind of does the same?
-    baltic_vars = ['Clupea_harengus_JUV', 'Clupea_harengus_SA', 'Clupea_harengus_LA', 'Gadus_morhua_JUV', 'Gadus_morhua_SA',
-                   'Gadus_morhua_LA', 'Sprattus_sprattus_JUV', 'Sprattus_sprattus_SA', 'Sprattus_sprattus_LA', 'TEMP',
-                   'SALIN',
-                   'TOTOXY', 'TOTP', 'TOTN', 'SIO4', 'NO3N', 'NH4N', 'COPEPOD']
-
-    baltic_depth = ['(0, 20)', '(20, 70)', '(70, 460)']
-
     ###Traditional
     def get_array_from_tif(self, _, baltic_variable):
         path = os.environ["BALTIC_FILE_PATH"]
@@ -79,7 +68,7 @@ class LayerReader:
         #print(year)
         layer_names = []
 
-        for fn in filenames:
+        for fn in sorted(filenames):
             fn = fn.replace(suffix, '')
             layer_names.append(fn)
         return [layer_name for layer_name in layer_names if year in layer_name]
@@ -114,16 +103,18 @@ class LayerReader:
 
 
     def fill_blocks(self, layer_name, to_fetch, cell_size_degrees):
+        #print(to_fetch)
         for block in to_fetch:
             if block is not None:
                 break
             return [None] * len(to_fetch)
 
         path = os.getenv("BALTIC_FOLDER_PATH")
-        #array = get_array_from_tif(path, layer_name)  # [-2:])
-        inp_array, xOrigin, yOrigin, pixelWidth, pixelHeight = get_band_from_tif(path,layer_name)
+        #array = self.get_array_from_tif(path, layer_name)  # [-2:])
+        inp_array, xOrigin, yOrigin, pixelWidth, pixelHeight = self.get_band_from_tif(path,layer_name)
+        #print(xOrigin, yOrigin, pixelWidth, pixelHeight)
         #array_height, array_width = array.shape
-        #print(array.shape)
+        #print(inp_array.shape)
         #print(np.min(array),np.max(array))
         result = []
 
@@ -135,22 +126,25 @@ class LayerReader:
                 continue
             block = to_fetch[block_index]['block']
             block_height, block_width = block.shape
+            #print(block.shape)
             lat_start, lon_start = to_fetch[block_index]['lat_lon_start']
+            #print(lat_start,lon_start)
 
             for row in range(block_height):
                 for col in range(block_width):
                     if np.isnan(block[row, col]):
-                        #block[row, col] = get_value_from_array(lat_start - (row * cell_size_degrees),
+                        #block[row, col] = self.get_value_from_array(lat_start - (row * cell_size_degrees),
                         #                                       lon_start + (col * cell_size_degrees), array,
                         #                                       array_height,
                         #                                       array_width)
-                        block[row,col] = get_value_from_band(lat=lat_start - (row * cell_size_degrees),
-                                                             lon= lon_start + (col * cell_size_degrees),
-                                                             inp_array=inp_array,
-                                                             xOrigin=xOrigin,
-                                                             yOrigin=yOrigin,
-                                                             pixelWidth=pixelWidth,
-                                                             pixelHeight=pixelHeight)
+                        block[row,col] = self.get_value_from_band(lat=lat_start - (row * cell_size_degrees),
+                                                                  lon= lon_start + (col * cell_size_degrees),
+                                                                  inp_array=inp_array,
+                                                                  xOrigin=xOrigin,
+                                                                  yOrigin=yOrigin,
+                                                                  pixelWidth=pixelWidth,
+                                                                  pixelHeight=pixelHeight)
+                        #print(block[row,col])
                         #print(lat_start - (row * cell_size_degrees),lon_start + (col * cell_size_degrees), np.quantile(array,0.8),array_height,array_width)
                         #print(get_value_from_array(lat_start - (row * cell_size_degrees),
                         #                                       lon_start + (col * cell_size_degrees), array,

@@ -2,3 +2,7 @@
 .DS_Store
 layer_readers/__pycache__/baltic_sea.cpython-37.pyc
 __pycache__/get_environmental_layer.cpython-37.pyc
+*occ_csv_reader.cpython-37.pyc
+*rastermap.cpython-37.pyc
+usage_mark.py
+*usage_output_df.csv
