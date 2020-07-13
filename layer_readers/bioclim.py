@@ -1,14 +1,17 @@
 import os.path
-from osgeo import gdal
+
 import numpy as np
+from osgeo import gdal
 
 
 class LayerReader:
-    bioclim_variables = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16',
-                         '17', '18', '19']
+    bioclim_variables = [str(x) for x in range(1,
+                                               20)]  # ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19']
 
     def get_array_from_tif(self, path, bioclim_variable):
-        ds = gdal.Open(os.path.join(path, 'wc2.0_bio_30s_' + bioclim_variable + '.tif'))
+        layer_path = os.path.join(path, 'wc2.1_10m_bio_' + str(int(bioclim_variable)) + '.tif')
+        print(layer_path, os.path.exists(layer_path))
+        ds = gdal.Open(layer_path)
         band = ds.GetRasterBand(1)
         return band.ReadAsArray()
 
