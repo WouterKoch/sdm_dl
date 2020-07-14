@@ -35,13 +35,11 @@ from layer_readers import latlon
 
 from tools import dwca_reader
 
-presences = dwca_reader.zip_to_presences('/home/wouter/Projects/Naturalis/datasets/GBIF_sphagnum_2019-09-30.zip')
+presences = dwca_reader.zip_to_presences('/home/wouter/Projects/Naturalis/datasets/GBIF_rosechafers_2019-09-24.zip')
 df = pd.DataFrame(presences, columns=['lat', 'lon', 'datetime'])
 df['label'] = 1
 
-df = df.head(3)
-
-pseudo_absences = pseudoabsence.generate(presences, .5, 1, 3)
+pseudo_absences = pseudoabsence.generate(presences, .25, .75, len(df))
 df_pseudo_absences = pd.DataFrame(pseudo_absences, columns=['lat', 'lon', 'datetime'])
 df_pseudo_absences['label'] = 0
 df = df.append(df_pseudo_absences)
@@ -49,19 +47,19 @@ df = df.append(df_pseudo_absences)
 locations = list(zip(df.lat, df.lon, df.datetime))
 
 layer_reader = esa_cci.LayerReader()
-df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 3, layer_reader)), rsuffix='_esacci')
+df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 7, layer_reader)), rsuffix='_esacci')
 
 layer_reader = GLOBE_elevation.LayerReader()
-df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 3, layer_reader)), rsuffix='_globe')
+df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 7, layer_reader)), rsuffix='_globe')
 
 layer_reader = bioclim.LayerReader()
-df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 3, layer_reader)), rsuffix='_bioclim')
+df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 7, layer_reader)), rsuffix='_bioclim')
 
 layer_reader = worldclim.LayerReader()
-df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 3, layer_reader)), rsuffix='_worldclim')
+df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 7, layer_reader)), rsuffix='_worldclim')
 
 layer_reader = latlon.LayerReader()
-df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 3, layer_reader)), rsuffix='_latlon')
+df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 7, layer_reader)), rsuffix='_latlon')
 
 df = df.drop(['lat', 'lon', 'datetime'], axis=1)
 

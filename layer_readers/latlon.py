@@ -11,8 +11,8 @@ class LayerReader:
         raster_min_lon = int(os.getenv("RASTER_MIN_LON"))
         raster_cell_size_deg = float(os.getenv("RASTER_CELL_SIZE_DEG"))
 
-        raster_width = int((raster_max_lon - raster_min_lon) / raster_cell_size_deg)
-        raster_height = int((raster_max_lat - raster_min_lat) / raster_cell_size_deg)
+        raster_width = int((raster_max_lon - raster_min_lon) / raster_cell_size_deg) + 1
+        raster_height = int((raster_max_lat - raster_min_lat) / raster_cell_size_deg) + 1
 
         # Switch dimensions so we can transpose later
         if layer_name == 'lat':
