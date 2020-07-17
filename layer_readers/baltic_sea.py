@@ -5,8 +5,10 @@
 
 
 import os.path
-from osgeo import gdal
+
 import numpy as np
+from osgeo import gdal
+
 
 class LayerReader:
 
@@ -128,13 +130,13 @@ class LayerReader:
             block_height, block_width = block.shape
             #print(block.shape)
             lat_start, lon_start = to_fetch[block_index]['lat_lon_start']
-            #print(lat_start,lon_start)
+            # print(lat_start_index,lon_start_index)
 
             for row in range(block_height):
                 for col in range(block_width):
                     if np.isnan(block[row, col]):
-                        #block[row, col] = self.get_value_from_array(lat_start - (row * cell_size_degrees),
-                        #                                       lon_start + (col * cell_size_degrees), array,
+                        # block[row, col] = self.get_value_from_array(lat_start_index - (row * cell_size_degrees),
+                        #                                       lon_start_index + (col * cell_size_degrees), array,
                         #                                       array_height,
                         #                                       array_width)
                         block[row,col] = self.get_value_from_band(lat=lat_start - (row * cell_size_degrees),
@@ -145,9 +147,9 @@ class LayerReader:
                                                                   pixelWidth=pixelWidth,
                                                                   pixelHeight=pixelHeight)
                         #print(block[row,col])
-                        #print(lat_start - (row * cell_size_degrees),lon_start + (col * cell_size_degrees), np.quantile(array,0.8),array_height,array_width)
-                        #print(get_value_from_array(lat_start - (row * cell_size_degrees),
-                        #                                       lon_start + (col * cell_size_degrees), array,
+                        # print(lat_start_index - (row * cell_size_degrees),lon_start_index + (col * cell_size_degrees), np.quantile(array,0.8),array_height,array_width)
+                        # print(get_value_from_array(lat_start_index - (row * cell_size_degrees),
+                        #                                       lon_start_index + (col * cell_size_degrees), array,
                         #                                       array_height,
                         #                                       array_width))
             result += [block]

@@ -2,13 +2,28 @@ import abc
 import os
 
 import datetime
-from typing import List
+from typing import List, Dict
 
 
 class AbstractLayerReader(object):
 
     @abc.abstractmethod
     def get_layer_names(self, date: datetime.datetime) -> List[str]:
+        pass
+
+    @abc.abstractmethod
+    def get_layer_from_file(self, layer_name: str):
+        pass
+
+    @abc.abstractmethod
+    def fill_blocks(self, layer_name: str, to_fetch: List[Dict], cell_size_degrees: float):
+        """
+
+        :param layer_name: name of the layer to fetch
+        :param to_fetch: TODO: describe structure of dictionary in lists
+        :param cell_size_degrees:
+        :return:
+        """
         pass
 
 

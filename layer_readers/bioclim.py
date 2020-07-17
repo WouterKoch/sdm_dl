@@ -3,8 +3,10 @@ import os.path
 import numpy as np
 from osgeo import gdal
 
+from layer_readers.general import AbstractLayerReader, get_raster
 
-class LayerReader:
+
+class LayerReader(AbstractLayerReader):
     bioclim_variables = [str(x) for x in range(1,
                                                20)]  # ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19']
 
@@ -31,11 +33,7 @@ class LayerReader:
     def get_layer_from_file(self, layer_name):
         filename = os.path.join(os.getenv("RASTER_CACHE_FOLDER_PATH"), 'bioclim', layer_name + '.npz')
 
-        raster_max_lat = int(os.getenv("RASTER_MAX_LAT"))
-        raster_min_lat = int(os.getenv("RASTER_MIN_LAT"))
-        raster_max_lon = int(os.getenv("RASTER_MAX_LON"))
-        raster_min_lon = int(os.getenv("RASTER_MIN_LON"))
-        raster_cell_size_deg = float(os.getenv("RASTER_CELL_SIZE_DEG"))
+        raster_cell_size_deg, raster_max_lat, raster_max_lon, raster_min_lat, raster_min_lon = get_raster()
 
         layer = {}
 

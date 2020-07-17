@@ -1,10 +1,13 @@
 import os
-from tqdm import tqdm
-import numpy as np
 from struct import unpack
 
+import numpy as np
+from tqdm import tqdm
 
-class LayerReader:
+from layer_readers.general import AbstractLayerReader
+
+
+class LayerReader(AbstractLayerReader):
 
     def get_value(self, lat, lon, current_file):
         if current_file is None:

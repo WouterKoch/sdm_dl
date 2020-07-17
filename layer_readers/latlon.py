@@ -2,8 +2,10 @@ import os
 
 import numpy as np
 
+from layer_readers.general import AbstractLayerReader
 
-class LayerReader:
+
+class LayerReader(AbstractLayerReader):
 
     def get_layer_from_file(self, layer_name):
         raster_max_lat = int(os.getenv("RASTER_MAX_LAT"))

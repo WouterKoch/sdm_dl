@@ -1,32 +1,39 @@
 import os.path
 
+import datetime
 import numpy as np
 from tqdm import tqdm
+from typing import List, Tuple
 
+from layer_readers.general import AbstractLayerReader, get_raster
 from tools import rastermap
 
-raster_max_lat = int(os.getenv("RASTER_MAX_LAT"))
-raster_min_lat = int(os.getenv("RASTER_MIN_LAT"))
-raster_max_lon = int(os.getenv("RASTER_MAX_LON"))
-raster_min_lon = int(os.getenv("RASTER_MIN_LON"))
-raster_cell_size_deg = float(os.getenv("RASTER_CELL_SIZE_DEG"))
+raster_cell_size_deg, raster_max_lat, raster_max_lon, raster_min_lat, raster_min_lon = get_raster()
 
 
-def load_block(map, lat_start, lon_start, block_size):
-    return map[lat_start:lat_start + block_size, lon_start:lon_start + block_size]
+def load_block(layer_map: np.array, lat_start_index, lon_start_index, block_size: int) -> np.array:
+    """
+    Returns a block of data of size `block_size` at location (lat_start_index, lon_start_index) from `layer_map`
+    """
+    return layer_map[lat_start_index:lat_start_index + block_size, lon_start_index:lon_start_index + block_size]
 
 
-def save_block(layer_map, lat_start_index, lon_start_index, block):
+def save_block(layer_map: np.array, lat_start_index: int, lon_start_index: int, block: np.array) -> np.array:
+    """
+    Stores a `block` of values in `layer_map`. The block is put at location (lat_start_index, lon_start_index)
+    :return: updated layer map
+    """
     block_height, block_width = block.shape
     layer_map[lat_start_index:lat_start_index + block_height, lon_start_index:lon_start_index + block_width] = block
     return layer_map
 
 
-def get_blocks(occurrences, block_size, layer_reader, normalize: bool = False):
+def get_blocks(occurrences: List[Tuple[float, float, datetime.datetime]], block_size: int, layer_reader: AbstractLayerReader,
+               normalize: bool = False):
     """
 
     :param occurrences:
-    :param block_size:
+    :param block_size: size of the block of samples around each occurrence
     :param layer_reader:
     :param normalize: if True normalizes the values
     :return:
