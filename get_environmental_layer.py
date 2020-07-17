@@ -42,7 +42,7 @@ def get_blocks(occurrences: List[Tuple[float, float, datetime.datetime]], block_
     per_layer = {}
 
     for occ_index, occurrence in tqdm(enumerate(occurrences)):
-        date = occurrence[2]
+        _, _, date = occurrence
         layer_names = layer_reader.get_layer_names(date)
         for layer_name in layer_names:
             if layer_name not in per_layer:

@@ -4,7 +4,7 @@ from struct import unpack
 import numpy as np
 from tqdm import tqdm
 
-from layer_readers.general import AbstractLayerReader
+from layer_readers.general import AbstractLayerReader, get_raster
 
 
 class LayerReader(AbstractLayerReader):
@@ -31,11 +31,7 @@ class LayerReader(AbstractLayerReader):
     def get_layer_from_file(self, layer_name):
         filename = os.path.join(os.getenv("RASTER_CACHE_FOLDER_PATH"), 'elevation', layer_name + '.npz')
 
-        raster_max_lat = int(os.getenv("RASTER_MAX_LAT"))
-        raster_min_lat = int(os.getenv("RASTER_MIN_LAT"))
-        raster_max_lon = int(os.getenv("RASTER_MAX_LON"))
-        raster_min_lon = int(os.getenv("RASTER_MIN_LON"))
-        raster_cell_size_deg = float(os.getenv("RASTER_CELL_SIZE_DEG"))
+        raster_cell_size_deg, raster_max_lat, raster_max_lon, raster_min_lat, raster_min_lon = get_raster()
 
         layer = {}
 

@@ -1,9 +1,11 @@
 import os
 
+import argparse
 import datetime
 import itertools
 import numpy as np
 import pandas as pd
+from typing import List
 
 working_dir = "Documents/sdm_dl/data"
 cell_size_deg = 1 / 6.
@@ -36,8 +38,12 @@ import get_environmental_layer as get_env
 
 from layer_readers import latlon, bioclim, worldclim, esa_cci, GLOBE_elevation
 
+default_features = ["esa", "globe_elevation", "worldclim", "bioclim"]
 
-def main():
+
+def main(features: List[str] = None):
+    if features is None:
+        features = default_features
     europe_left_upper = (71.02, -25.49)  # (N,E), (lat,lon)
     europe_right_lower = (37.58, 42.71)  # (N,E), (lat,lon)
 
@@ -56,8 +62,6 @@ def main():
     layer_reader = latlon.LayerReader()
     df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 1, layer_reader)), rsuffix='_latlon')
 
-    features = ["esa", "globe_elevation", "worldclim", "bioclim"]
-    features = ["worldclim"]
     if "esa" in features:
         layer_reader = esa_cci.LayerReader()
         df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 1, layer_reader)), rsuffix='_esacci')
@@ -73,7 +77,6 @@ def main():
     if "bioclim" in features:
         layer_reader = bioclim.LayerReader()
         df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 1, layer_reader)), rsuffix='_bioclim')
-
 
     df = df.drop(['lat', 'lon', 'datetime'], axis=1)
 
@@ -99,4 +102,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--features", nargs="+", default=default_features)
+
+    args = parser.parse_args()
+    main(args.features)
