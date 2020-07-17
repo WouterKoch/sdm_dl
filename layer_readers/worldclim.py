@@ -1,29 +1,23 @@
 import os.path
-import sys
-from osgeo import gdal
+
+import datetime
 import numpy as np
+from osgeo import gdal
+from typing import List
+
+from layer_readers.general import AbstractLayerReader, get_raster
 
 
-class LayerReader:
-    month_codes = [None, '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+class LayerReader(AbstractLayerReader):
     worldclim_variables = ['prec', 'srad', 'tavg', 'tmax', 'tmin', 'vapr', 'wind']
 
-    # TODO: get more layers, and for appropriate months
-    def get_layer_names(self, _):
-        return [
-            'WorldClim_vapr_m01', 'WorldClim_vapr_m02', 'WorldClim_vapr_m03', 'WorldClim_vapr_m04',
-            'WorldClim_vapr_m05', 'WorldClim_vapr_m06', 'WorldClim_vapr_m07', 'WorldClim_vapr_m08',
-            'WorldClim_vapr_m09', 'WorldClim_vapr_m10', 'WorldClim_vapr_m11', 'WorldClim_vapr_m12',
-        ]
+    def get_layer_names(self, date: datetime.datetime) -> List[str]:
+        return [f"WorldClim_{variable_name}_m{date.month:02}" for variable_name in self.worldclim_variables]
 
     def get_layer_from_file(self, layer_name):
         filename = os.path.join(os.getenv("RASTER_CACHE_FOLDER_PATH"), 'worldclim', layer_name + '.npz')
 
-        raster_max_lat = int(os.getenv("RASTER_MAX_LAT"))
-        raster_min_lat = int(os.getenv("RASTER_MIN_LAT"))
-        raster_max_lon = int(os.getenv("RASTER_MAX_LON"))
-        raster_min_lon = int(os.getenv("RASTER_MIN_LON"))
-        raster_cell_size_deg = float(os.getenv("RASTER_CELL_SIZE_DEG"))
+        raster_cell_size_deg, raster_max_lat, raster_max_lon, raster_min_lat, raster_min_lon = get_raster()
 
         layer = {}
 
@@ -41,6 +35,7 @@ class LayerReader:
         layer['filename'] = filename
         return layer
 
+
     def get_array_from_tif(self, path_to_tif):
         ds = gdal.Open(path_to_tif)
         band = ds.GetRasterBand(1)
@@ -55,17 +50,31 @@ class LayerReader:
         return value
 
     def fill_blocks(self, layer_name, to_fetch, cell_size_degrees):
+        """
+
+        :param layer_name: one of the layer names returned by `get_layer_names`, e.g. 'WorldClim_vapr_m02'
+        :param to_fetch:
+        :param cell_size_degrees:
+        :return:
+        """
         for block in to_fetch:
             if block != None:
                 break
             return [None] * len(to_fetch)
 
-        month = layer_name[-2:]
-        worldclim_variable = layer_name[(-(len(layer_name) - 10)):][:-4]
+        import re
+        match = re.match(r".*_(.*)_m(\d+)", layer_name)
+        if match is None:
+            raise ValueError(f"Incompatible layer name '{layer_name}'")
+        worldclim_variable, month = match.groups()
 
         path = os.getenv("WORLDCLIM_FOLDER_PATH")
-        array = self.get_array_from_tif(
-            os.path.join(path, worldclim_variable, 'wc2.0_30s_' + worldclim_variable + '_' + month + '.tif'))
+        resolution = "10m"
+        version = "2.1"
+        filename = f"wc{version}_{resolution}_" + worldclim_variable + "_" + month + ".tif"
+        full_path = os.path.join(path, worldclim_variable, filename)
+        print(full_path)
+        array = self.get_array_from_tif(full_path)
         array_height, array_width = array.shape
         result = []
 

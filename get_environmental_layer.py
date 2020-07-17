@@ -1,6 +1,8 @@
-from tqdm import tqdm
 import os.path
+
 import numpy as np
+from tqdm import tqdm
+
 from tools import rastermap
 
 raster_max_lat = int(os.getenv("RASTER_MAX_LAT"))
@@ -20,7 +22,15 @@ def save_block(layer_map, lat_start_index, lon_start_index, block):
     return layer_map
 
 
-def get_blocks(occurrences, block_size, layer_reader):
+def get_blocks(occurrences, block_size, layer_reader, normalize: bool = False):
+    """
+
+    :param occurrences:
+    :param block_size:
+    :param layer_reader:
+    :param normalize: if True normalizes the values
+    :return:
+    """
     results = [{} for _ in range(len(occurrences))]
     per_layer = {}
 
@@ -39,15 +49,15 @@ def get_blocks(occurrences, block_size, layer_reader):
 
         for occ_index, occurrence in layer_occurrences.items():
             lat, lon, _ = occurrence
-            #print(lat,lon)
+            # print(lat,lon)
             lat_index, lon_index = rastermap.lat_lon_to_indices(lat, lon)
-            #print(lat_index, lon_index)
+            # print(lat_index, lon_index)
             lat, lon = rastermap.indices_to_lat_lon(rastermap.to_start_index(lat_index, block_size),
                                                     rastermap.to_start_index(lon_index, block_size))
-            #print(lat,lon)
+            # print(lat,lon)
             results[occ_index][layer_name] = load_block(layer['map'], rastermap.to_start_index(lat_index, block_size),
                                                         rastermap.to_start_index(lon_index, block_size), block_size)
-            #print(load_block(layer['map'], rastermap.to_start_index(lat_index, block_size),
+            # print(load_block(layer['map'], rastermap.to_start_index(lat_index, block_size),
             #                                            rastermap.to_start_index(lon_index, block_size), block_size))
             # if some values were not present in the cache, remember this block as being incomplete
             if np.isnan(np.sum(results[occ_index][layer_name])):
@@ -86,15 +96,16 @@ def get_blocks(occurrences, block_size, layer_reader):
         if layer['metadata']['data_type'] != 'categorical':
             min_, max_ = layer['metadata']['normalization_range']
 
-            for result in results:
-                if layer_name in result:
-                    result[layer_name] = (result[layer_name] - ((min_ + max_) / 2)) / ((max_ - min_) / 2)
-                result[layer_name][result[layer_name] < -1] = None
-                # This will give a warning "RuntimeWarning: invalid value encountered in less"
-                # that's because there are missing values in the output, although that is the whole point
-                # This happens for both None and np.nan, while these are accepted as missing value notation.
-                # E.g. https://github.com/Unidata/netcdf4-python/issues/766
-                # See also https://stackoverflow.com/questions/28654325/what-is-pythons-equivalent-of-rs-na
+            if normalize:
+                for result in results:
+                    if layer_name in result:
+                        result[layer_name] = (result[layer_name] - ((min_ + max_) / 2)) / ((max_ - min_) / 2)
+                    result[layer_name][result[layer_name] < -1] = None
+                    # This will give a warning "RuntimeWarning: invalid value encountered in less"
+                    # that's because there are missing values in the output, although that is the whole point
+                    # This happens for both None and np.nan, while these are accepted as missing value notation.
+                    # E.g. https://github.com/Unidata/netcdf4-python/issues/766
+                    # See also https://stackoverflow.com/questions/28654325/what-is-pythons-equivalent-of-rs-na
 
         else:
             categories = layer['metadata']['data_categories']

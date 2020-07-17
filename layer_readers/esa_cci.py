@@ -1,10 +1,14 @@
 import os.path
+
+import numpy as np
+from netCDF4 import Dataset
 from osgeo import gdal
 from tqdm import tqdm
-from netCDF4 import Dataset
-import numpy as np
 
-class LayerReader:
+from layer_readers.general import AbstractLayerReader, get_raster
+
+
+class LayerReader(AbstractLayerReader):
     cci_codes = [10, 11, 12, 20, 30, 40, 50, 60, 61, 62, 70, 71, 72, 80, 81, 82, 90, 100, 110, 120, 121, 122, 130, 140,
                  150,
                  151, 152, 153, 160, 170, 180, 190, 200, 201, 202, 210, 220]
@@ -13,15 +17,10 @@ class LayerReader:
         year = str(min(max(date.year, 1992), 2018))
         return ['ESA_CCI_' + year]
 
-
     def get_layer_from_file(self, layer_name):
         filename = os.path.join(os.getenv("RASTER_CACHE_FOLDER_PATH"), 'esacci', layer_name + '.npz')
 
-        raster_max_lat = int(os.getenv("RASTER_MAX_LAT"))
-        raster_min_lat = int(os.getenv("RASTER_MIN_LAT"))
-        raster_max_lon = int(os.getenv("RASTER_MAX_LON"))
-        raster_min_lon = int(os.getenv("RASTER_MIN_LON"))
-        raster_cell_size_deg = float(os.getenv("RASTER_CELL_SIZE_DEG"))
+        raster_cell_size_deg, raster_max_lat, raster_max_lon, raster_min_lat, raster_min_lon = get_raster()
 
         layer = {}
 
@@ -84,19 +83,25 @@ class LayerReader:
         layer['filename'] = filename
         return layer
 
+    cache = {}
 
     def get_array(self, path, year):
-        if year < 2016:
-            tif_file = gdal.Open(os.path.join(path, 'ESACCI-LC-L4-LCCS-Map-300m-P1Y-' + str(year) + '-v2.0.7.tif'))
-            array = tif_file.GetRasterBand(1).ReadAsArray()
-            array_height, array_width = array.shape
+        if year not in self.cache:
+            if year < 2016:
+                # ESACCI-LC-L4-LCCS-Map-300m-P1Y-2015-v2.0.7
+                tif_file = gdal.Open(os.path.join(path, 'ESACCI-LC-L4-LCCS-Map-300m-P1Y-' + str(year) + '-v2.0.7.tif'))
+                array = tif_file.GetRasterBand(1).ReadAsArray()
+                array_height, array_width = array.shape
+            else:
+                file = Dataset(os.path.join(path, 'C3S-LC-L4-LCCS-Map-300m-P1Y-' + str(year) + '-v2.1.1.nc'), 'r')
+                array = file.variables['lccs_class']
+                array_height = file.dimensions['lat'].size
+                array_width = file.dimensions['lon'].size
+            result = array, array_width, array_height
+            self.cache[year] = result
         else:
-            file = Dataset(os.path.join(path, 'C3S-LC-L4-LCCS-Map-300m-P1Y-' + str(year) + '-v2.1.1.nc'), 'r')
-            array = file.variables['lccs_class']
-            array_height = file.dimensions['lat'].size
-            array_width = file.dimensions['lon'].size
-        return array, array_width, array_height
-
+            result = self.cache[year]
+        return result
 
     def get_value(self, lat, lon, layer, array, array_height, array_width, path):
         year = int(layer[-4:])
@@ -111,7 +116,6 @@ class LayerReader:
             return int(array[lat_pos][lon_pos]), array, array_width, array_height
         else:
             return int(array[0, lat_pos, lon_pos]), array, array_width, array_height
-
 
     def fill_blocks(self, layer, to_fetch, cell_size_degrees):
         result = []

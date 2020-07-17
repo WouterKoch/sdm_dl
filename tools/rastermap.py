@@ -15,5 +15,6 @@ def indices_to_lat_lon(lat_index, lon_index):
     return raster_max_lat - (lat_index + .5) * raster_cell_size_deg, (
             lon_index + .5) * raster_cell_size_deg + raster_min_lon
 
+
 def to_start_index(center, block_size):
     return center - int(block_size / 2)
