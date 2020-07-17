@@ -1,14 +1,24 @@
 import os
+from builtins import print
+
 from tqdm import tqdm
 import numpy as np
 from struct import unpack
 
 
 class LayerReader:
+    current_file = None
+    current_file_character = None
 
-    def get_value(self, lat, lon, current_file):
-        if current_file is None:
-            current_file = open(os.getenv("GLOBE_FILE_PATH"), "rb")
+    def tile_character(self, lat, lon):
+        characters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p']
+        return characters[int(lon / 90) + 2 + (4 * (1 - int(lat / 50)))]
+
+    def get_value(self, lat, lon, current_file, current_file_character):
+        tile = self.tile_character(lat, lon)
+        if current_file_character != tile:
+            current_file_character = tile
+            current_file = open(os.path.join(os.getenv("GLOBE_FOLDER_PATH"), tile + '10g'), "rb")
 
         get_row = (90 * 60 * 2) - int(lat * 60 * 2)
         get_col = int(lon * 60 * 2)
@@ -20,7 +30,7 @@ class LayerReader:
         if value == -500:
             value = np.nan
 
-        return value, current_file
+        return value, current_file, current_file_character
 
     def get_layer_names(self, _):
         return ['elevation']
@@ -62,13 +72,15 @@ class LayerReader:
             lat_start, lon_start = to_fetch[block_index]['lat_lon_start']
 
             current_file = None
+            current_file_character = None
             with tqdm(total=block_height * block_width, position=0, leave=True) as pbar:
                 for row in range(block_height):
                     for col in range(block_width):
                         if np.isnan(block[row, col]):
-                            block[row, col], current_file = self.get_value(lat_start - (row * cell_size_degrees),
-                                                                      lon_start + (col * cell_size_degrees),
-                                                                      current_file)
+                            block[row, col], current_file, current_file_character = self.get_value(
+                                lat_start - (row * cell_size_degrees),
+                                lon_start + (col * cell_size_degrees),
+                                current_file, current_file_character)
                         pbar.update(1)
             fetched += [block]
             pbar.close()
