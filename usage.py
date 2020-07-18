@@ -18,6 +18,7 @@ os.environ["PROJECT_ROOT"] = "/{}/Projects/Naturalis/sdm_dl".format(user)
 os.environ["BALTIC_FILE_PATH"] = "/{}/Projects/Naturalis/environment/BALTIC".format(user)
 os.environ["GLOBE_FILE_PATH"] = "/{}/Projects/Naturalis/environment/GLOBE/c10g".format(user)
 os.environ["GLOBE_FOLDER_PATH"] = "/{}/Projects/Naturalis/environment/GLOBE".format(user)
+os.environ["GEBCO_FOLDER_PATH"] = "/{}/Projects/Naturalis/environment/GEBCO".format(user)
 os.environ["ESACCI_FOLDER_PATH"] = "/{}/Projects/Naturalis/environment/ESACCI".format(user)
 os.environ["WORLDCLIM_FOLDER_PATH"] = "/{}/Projects/Naturalis/environment/WorldClim".format(user)
 os.environ["BIOCLIM_FOLDER_PATH"] = "/{}/Projects/Naturalis/environment/BioClim".format(user)
@@ -30,6 +31,7 @@ import get_environmental_layer as get_env
 
 from layer_readers import esa_cci
 from layer_readers import GLOBE_elevation
+from layer_readers import GEBCO_elevation
 from layer_readers import bioclim
 from layer_readers import worldclim
 from layer_readers import latlon
@@ -50,8 +52,8 @@ locations = list(zip(df.lat, df.lon, df.datetime))
 # layer_reader = esa_cci.LayerReader()
 # df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 7, layer_reader)), rsuffix='_esacci')
 
-layer_reader = GLOBE_elevation.LayerReader()
-df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 7, layer_reader)), rsuffix='_globe')
+layer_reader = GEBCO_elevation.LayerReader()
+df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 7, layer_reader)), rsuffix='_gebco')
 #
 # layer_reader = bioclim.LayerReader()
 # df = df.join(pd.DataFrame.from_dict(get_env.get_blocks_as_columns(locations, 7, layer_reader)), rsuffix='_bioclim')
